@@ -26,7 +26,11 @@ Fill `packages/data/reference/addresses.json`, `tokens.json`, `subgraphs.json`, 
 **Accept:** `npx tsx scripts/verify_reference.ts` exits 0; zero entries with `verified: false`.
 **Deps:** T-001
 
-### T-003 · Probe every external API · TODO
+### T-003 · Probe every external API · DONE
+> 6 probes written + run. **OK:** Binance klines, DefiLlama pools+chart, BSC RPC
+> multicall3, Venus on-chain reads. **BLOCKED (recorded):** PCS v3 subgraph
+> (GRAPH_API_KEY), BscScan (BSCSCAN_API_KEY) — re-run steps in docs/findings/T-003.md.
+> Finding: Venus Core Comptroller is an EIP-2535 Diamond — see T-044 note.
 Under `scripts/probe/`, one script per source: Binance klines, PCS v3 subgraph (confirm the subgraph ID resolves and return one pool), BSC RPC multicall, Venus reads, DefiLlama pools, BscScan source fetch. Print raw responses to `scripts/probe/output/`.
 **Rule R5: do not write a typed client for a response you have not printed.**
 **Accept:** six probe outputs on disk, each with a real response. Any failing source is reported as `BLOCKED` with the error, not worked around silently.

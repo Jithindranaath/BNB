@@ -1,0 +1,25 @@
+{
+  "url": "https://yields.llama.fi/chart/32038bbe-b72d-49ab-aa17-37d61d44c579",
+  "pool": "32038bbe-b72d-49ab-aa17-37d61d44c579",
+  "points": 1520,
+  "firstPoint": {
+    "timestamp": "2022-07-06T00:00:00.000Z",
+    "tvlUsd": 133767900,
+    "apy": 21.57744,
+    "apyBase": null,
+    "apyReward": null,
+    "il7d": null,
+    "apyBase7d": null,
+    "pricePerShare": null
+  },
+  "lastPoint": {
+    "timestamp": "2026-09-06T19:01:55.335Z",
+    "tvlUsd": 10365717,
+    "apy": 8.03852,
+    "apyBase": 8.03852,
+    "apyReward": 0,
+    "il7d": null,
+    "apyBase7d": null,
+    "pricePerShare": null
+  }
+}

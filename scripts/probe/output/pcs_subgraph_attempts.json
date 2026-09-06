@@ -1,0 +1,12 @@
+{
+  "attempts": [
+    {
+      "note": "GRAPH_API_KEY unset — skipped decentralised-network gateway"
+    },
+    {
+      "url": "https://api.thegraph.com/subgraphs/name/pancakeswap/exchange-v3-bsc",
+      "ok": false,
+      "error": "fetch failed"
+    }
+  ]
+}

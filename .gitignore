@@ -28,8 +28,7 @@ scripts/node_modules/
 # --- data cache (rule: real data, cached locally, never committed) ---
 packages/data/.cache/
 *.parquet
-scripts/probe/output/*
-!scripts/probe/output/.gitkeep
+# scripts/probe/output/ IS committed — it is the R5 evidence (real API responses)
 
 # --- foundry ---
 contracts/out/

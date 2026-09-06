@@ -1,0 +1,6 @@
+{
+  "status": "BLOCKED",
+  "source": "BscScan API (etherscan v2, chainid=56)",
+  "error": "needs BSCSCAN_API_KEY",
+  "at": "2026-09-06T19:55:28.820Z"
+}
