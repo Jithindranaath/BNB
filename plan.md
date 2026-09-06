@@ -36,7 +36,12 @@ Under `scripts/probe/`, one script per source: Binance klines, PCS v3 subgraph (
 **Accept:** six probe outputs on disk, each with a real response. Any failing source is reported as `BLOCKED` with the error, not worked around silently.
 **Deps:** T-002
 
-### T-004 · Gateway PancakeSwap capability probe · TODO — **HIGH PRIORITY, DAY 1**
+### T-004 · Gateway PancakeSwap capability probe · DONE — **HIGH PRIORITY, DAY 1**
+> **Gateway v2.16.0 CAN write to PancakeSwap v3 on BSC** — clmm routes
+> open/add/remove/close/collect + swap, `bsc` in supported networks, verified in
+> source + a live container. Not quote-only. Stock image needs BSC RPC config
+> (T-041/T-043); no on-chain tx run yet (T-043). Primary path = Gateway, fallback
+> = viem NonfungiblePositionManager kept until T-043. See docs/findings/T-004.md.
 Bring up `hummingbot-api` + `gateway`. Determine whether Gateway can *write* to PancakeSwap on BSC (add/remove liquidity, swap) or only quote prices. The Hummingbot skills list PancakeSwap only as an arbitrage price source, so assume quote-only until proven otherwise.
 **Accept:** a written finding in `docs/findings/T-004.md` stating exactly what works, with the commands and responses. If quote-only → `pcs-rebalancer` executes via our own viem position manager (spec §6.3) and you note that here.
 **Deps:** T-001

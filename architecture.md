@@ -147,8 +147,8 @@ Infra images (`infra/docker-compose.yml`):
 postgres:                 timescale/timescaledb:2.17.2-pg16
 redis:                    redis:7.4-alpine
 anvil:                    ghcr.io/foundry-rs/foundry:v1.8.1
-hummingbot-api image tag: not yet pulled — T-004 (compose profile "trading")
-gateway image tag:        not yet pulled — T-004 (compose profile "trading")
+gateway image tag:        hummingbot/gateway:version-2.16.0  (probed in T-004; tag is "version-2.16.0", not "2.16.0")
+hummingbot-api image tag: not yet pulled — T-041 (compose profile "trading")
 ```
 
 ## 4. Reference data — the R1 boundary
@@ -350,7 +350,7 @@ Orchestrator batches receipt leaves every 10 minutes, computes the root, submits
 
 | Risk | Detection | Fallback |
 |---|---|---|
-| Hummingbot Gateway may be quote-only for PancakeSwap (skills list it only as an arb price source) | T-004 probe on day 1 | Write our own v3 position manager against `NonfungiblePositionManager` with viem; keep Hummingbot for grid/arb |
+| ~~Hummingbot Gateway may be quote-only for PancakeSwap~~ **RESOLVED T-004: Gateway v2.16.0 has PancakeSwap CLMM write routes for BSC** (open/add/remove/close/collect). Remaining risk: not yet run end-to-end on mainnet; stock image needs BSC RPC config. | T-004 done; T-043 does the real on-chain dry run | Primary = Gateway CLMM routes; fallback = our viem `NonfungiblePositionManager` path (spec §6.3), kept until Gateway proven in T-043. See docs/findings/T-004.md |
 | Graph subgraph ID or gateway URL wrong/stale | `verify_reference.ts` + probe | PancakeSwap's own hosted API; direct RPC reads |
 | RPC rate limits under polling load | 429s in logs | multicall + increase poll interval + second provider |
 | Grid agent has too short a live window by judging | Start it running on **day 2**, not day 4 | Clearly labelled backtest alongside the live window, never instead of it |

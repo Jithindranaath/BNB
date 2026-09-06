@@ -63,13 +63,19 @@ services:
       - redis
 
   gateway:
-    image: hummingbot/gateway:latest
+    image: hummingbot/gateway:version-2.16.0
     profiles: ["trading"]
-    env_file:
-      - ../.env
+    environment:
+      GATEWAY_PASSPHRASE: ${GATEWAY_PASSPHRASE:-proofstand-dev}
+      DEV: "true"
     ports:
       - "${GATEWAY_PORT:-15888}:15888"
+    volumes:
+      - gatewayconf:/home/gateway/conf
+      - gatewaylogs:/home/gateway/logs
 
 volumes:
   pgdata:
   redisdata:
+  gatewayconf:
+  gatewaylogs:

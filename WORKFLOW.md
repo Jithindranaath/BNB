@@ -157,10 +157,11 @@ Stop and surface it (don't work around it silently) when:
 > Exactly one line. Update it at the OPEN step of every task.
 
 ```
-PHASE:  0 — Ground truth
-TASK:   T-002 · Populate and verify reference data
-STATE:  TODO (next)
-NEXT:   T-003 (probe every external API) — GRAPH_API_KEY + BSCSCAN_API_KEY still needed
+PHASE:  0 — Ground truth  (COMPLETE — Gate 0→1 review pending)
+TASK:   T-002, T-003, T-004 all DONE
+STATE:  Phase 0 done except two key-gated re-runs (subgraph, bscscan)
+NEXT:   Phase 1 — T-010 source clients (binance/rpc/venus/llama unblocked now;
+        subgraph.py + bscscan.py wait on GRAPH_API_KEY / BSCSCAN_API_KEY)
 ```
 
 ---
@@ -195,6 +196,29 @@ NEXT:   T-003 (probe every external API) — GRAPH_API_KEY + BSCSCAN_API_KEY sti
   blunt (kills all node). Use a targeted kill next time.
 - Next: **T-002** — fetch PCS/Venus/Multicall3 addresses + subgraph IDs from
   official docs (R1), run `verify_reference.ts` against keyless PublicNode RPC.
+
+### 2026-09-07 · T-002 / T-003 / T-004 · DONE (Phase 0 complete)
+- **T-002:** 15 addresses+tokens sourced from official repos/docs and verified
+  on BSC mainnet (bytecode + identity eth_call) — `verify_reference.ts` rewritten
+  data-driven, exits 0. PancakeSwap v3 (factory/deployer/NPM/router/quoter) from
+  `pancake-v3-contracts/deployments/bscMainnet.json`; SmartRouter + V2 router/factory;
+  Venus Comptroller from docs-v4.venus.io; Multicall3 from mds1/multicall3; tokens
+  from pancakeswap/token-list (all 18-dec on BSC). subgraphs.json: ids recorded,
+  `verified:false`, deferred to T-003 (needs GRAPH_API_KEY). abis/erc20.json added.
+- **T-003:** 6 probes written + run, raw output committed under scripts/probe/output/.
+  OK: Binance, DefiLlama (pools+chart), BSC RPC multicall3, Venus on-chain.
+  BLOCKED (recorded, not worked around): PCS subgraph (GRAPH_API_KEY), BscScan
+  (BSCSCAN_API_KEY). **Finding: Venus Core Comptroller is an EIP-2535 Diamond** —
+  `liquidationIncentiveMantissa()` reverts; T-044 must find the real source.
+- **T-004:** **Gateway v2.16.0 CAN write to PancakeSwap v3 on BSC** (clmm routes
+  open/add/remove/close/collect + swap; `bsc` supported). Verified in source +
+  a live container (`/config?namespace=pancakeswap` returns real config; clmm
+  route reachable). "Pool not found" for BSC = stock image has no BSC RPC (config,
+  not capability). "Assume quote-only" premise retired. Primary = Gateway,
+  fallback = viem NPM path, decided for real in T-043. docs/findings/T-004.md.
+- Blunt-kill note from last entry still stands; not repeated this session.
+- Key-gated re-runs outstanding: `probe/pcs_subgraph.ts`, `probe/bscscan_source.ts`.
+- Next: **Gate 0→1 review**, then Phase 1 T-010.
 
 ---
 
