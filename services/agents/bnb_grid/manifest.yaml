@@ -1,0 +1,17 @@
+# spec.md §1 (schema) + §5 (behaviour).
+id: bnb-grid
+name: BNB/USDT grid trader
+category: grid
+one_liner: Places a calibrated grid and only counts a win after gas and fees.
+tiers: [1, 2]
+inputs:
+  pair:        { type: enum, values: [BNB-USDT], default: BNB-USDT, required: true }
+  capital_usd: { type: number, min: 50, max: 100000, required: true }
+  grid_levels: { type: number, min: 5, max: 30, default: 12 }
+  risk:        { type: enum, values: [tight, balanced, wide], default: balanced }
+data_deps: [binance.klines]
+baseline: hodl
+advantage_metric: { name: net_pnl_usd, unit: USD, higher_is_better: true }
+# TODO(T-020): set a real fee before Tier 2 launch. tbd => card shows no price yet.
+pricing: { model: tbd }
+kill_switch: { max_loss_pct: 5 }   # spec §5.3: also halts if price exits range by >2x spacing

@@ -1,0 +1,15 @@
+{
+  "_note": "R1: subgraph ids + gateway URL templates only. CONFIRM the id in The Graph explorer before use (decentralised network, not a hosted service). T-002 verifies.",
+  "pancakeswapV3Bsc": {
+    "id": "",
+    "gateway": "https://gateway.thegraph.com/api/{GRAPH_API_KEY}/subgraphs/id/{id}",
+    "verified": false,
+    "note": "Source the id from The Graph explorer; paste the explorer URL here."
+  },
+  "venusBsc": {
+    "id": "",
+    "gateway": "https://gateway.thegraph.com/api/{GRAPH_API_KEY}/subgraphs/id/{id}",
+    "verified": false,
+    "note": "Used for lending position history only. Live HF reads are on-chain (spec.md §7.1)."
+  }
+}

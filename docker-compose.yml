@@ -1,0 +1,4 @@
+# Root convenience entrypoint. The real service definitions live in infra/
+# (architecture.md §2). Run `docker compose up` from the repo root.
+include:
+  - infra/docker-compose.yml

@@ -1,0 +1,17 @@
+# spec.md §1 (schema) + §7 (behaviour). Acts only on on-chain reads (subgraph lag can liquidate).
+id: venus-guard
+name: Venus health-factor guard
+category: health_factor
+one_liner: Watches your Venus health factor and tops up the smallest amount that keeps you safe.
+tiers: [1, 2]
+inputs:
+  account:       { type: address, required: true }
+  trigger_hf:    { type: number, min: 1.01, max: 3.0, default: 1.15 }
+  buffer_token:  { type: enum, values: [USDT, USDC, WBNB], default: USDT, required: true }
+  buffer_amount: { type: number, min: 10, max: 1000000, required: true }
+data_deps: [rpc.comptroller, rpc.vtoken_balances, rpc.prices, binance.klines]
+baseline: no_action
+advantage_metric: { name: usd_saved, unit: USD, higher_is_better: true }
+# TODO(T-020): set a real fee before Tier 2 launch.
+pricing: { model: tbd }
+kill_switch: { max_loss_pct: 5 }

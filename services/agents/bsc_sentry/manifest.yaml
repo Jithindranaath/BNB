@@ -1,0 +1,14 @@
+# spec.md §1 (schema) + §3 (behaviour). BUILD FIRST. Tier 0: no wallet — the judge's entry point.
+id: bsc-sentry
+name: BSC token & pool security sentry
+category: security
+one_liner: Fork-simulates a real buy and sell to catch honeypots and tax traps, with evidence.
+tiers: [0]
+inputs:
+  target: { type: address, required: true }   # token or v3 pool
+data_deps: [anvil_fork, rpc.slots, rpc.owner, bscscan.source, bscscan.creation, rpc.holders]
+baseline: manual_analyst           # human analyst, stopwatch; fixtures/manual_baselines.json
+advantage_metric: { name: wall_seconds, unit: seconds, higher_is_better: false }
+pricing: { model: free }
+# spec §3.3: hard-fail list (honeypot, sell tax > 25%, unrenounced mint) forces CRITICAL.
+# spec §3.3: never output a score line without the evidence that produced it.

@@ -1,0 +1,14 @@
+{
+  "name": "proofstand-scripts",
+  "private": true,
+  "type": "module",
+  "description": "Verification + one-off probe scripts. Run with tsx.",
+  "scripts": {
+    "verify:reference": "tsx verify_reference.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "viem": "^2.21.54"
+  }
+}

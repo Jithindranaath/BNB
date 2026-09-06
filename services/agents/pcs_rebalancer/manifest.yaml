@@ -1,0 +1,15 @@
+# spec.md §1 (schema) + §6 (behaviour). The marketplace renders ONLY from this + agent_stats.
+id: pcs-rebalancer
+name: PancakeSwap v3 range manager
+category: rebalancing            # rebalancing|grid|yield|health_factor|security
+one_liner: Keeps your LP position in range only when the fees pay for the gas.
+tiers: [1, 2]
+inputs:
+  pool:        { type: address, required: true }
+  capital_usd: { type: number, min: 50, max: 100000, required: true }
+  risk:        { type: enum, values: [tight, balanced, wide], default: balanced }
+data_deps: [pcs_subgraph.pool, pcs_subgraph.poolDayDatas, rpc.slot0, rpc.position, binance.klines]
+baseline: static_range
+advantage_metric: { name: net_fees_usd, unit: USD, higher_is_better: true }
+pricing: { model: perf_fee, bps: 1000 }
+kill_switch: { max_loss_pct: 5 }

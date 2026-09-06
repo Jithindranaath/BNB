@@ -1,0 +1,16 @@
+# spec.md §1 (schema) + §4 (behaviour). Tier 0: no wallet, no funds — judge entry point.
+id: pcs-yield
+name: PancakeSwap net-yield router
+category: yield
+one_liner: Ranks pools by net APR after IL, gas, emissions decay and dilution — not headline.
+tiers: [0]
+inputs:
+  capital_usd:  { type: number, min: 50, max: 1000000, required: true }
+  risk:         { type: enum, values: [conservative, balanced, degen], default: balanced }
+  horizon_days: { type: number, min: 1, max: 365, default: 30 }
+data_deps: [pcs_subgraph.pools, pcs_subgraph.poolDayDatas, defillama.pools, defillama.chart, binance.klines, bsc_sentry.report]
+baseline: top_headline_apr
+advantage_metric: { name: net_apr_delta_pct, unit: pct, higher_is_better: true }
+pricing: { model: free }
+# spec §4.2: every candidate pool + both tokens pass through bsc-sentry; any CRITICAL -> excluded, shown.
+sentry_gate: true

@@ -1,0 +1,14 @@
+{
+  "_note": "R1: the ONLY place addresses exist. Do NOT populate from memory. T-002 fills each 'address' from the official doc named in 'source', then verify_reference.ts flips 'verified' to true after checking on-chain bytecode + identity.",
+  "bsc": {
+    "chainId": 56,
+    "contracts": {
+      "pancakeV3Factory":         { "address": "", "verified": false, "source": "" },
+      "pancakeV3PositionManager": { "address": "", "verified": false, "source": "" },
+      "pancakeSmartRouter":       { "address": "", "verified": false, "source": "" },
+      "pancakeQuoterV2":          { "address": "", "verified": false, "source": "" },
+      "venusComptroller":         { "address": "", "verified": false, "source": "" },
+      "multicall3":               { "address": "", "verified": false, "source": "" }
+    }
+  }
+}

@@ -1,0 +1,75 @@
+# Core local infra for proofstand (architecture.md §2, §3).
+# `docker compose up`            -> postgres, redis, anvil  (must all become healthy)
+# `docker compose --profile trading up`  -> also hummingbot-api + gateway (T-004)
+#
+# Values come from the repo-root .env (copy infra/.env.example -> .env first).
+
+name: proofstand
+
+services:
+  postgres:
+    image: timescale/timescaledb:2.17.2-pg16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-proofstand}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-proofstand}
+      POSTGRES_DB: ${POSTGRES_DB:-proofstand}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-proofstand} -d ${POSTGRES_DB:-proofstand}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  anvil:
+    image: ghcr.io/foundry-rs/foundry:v1.8.1
+    # Plain local chain for T-001. The BSC fork (--fork-url) is added by the
+    # sentry fork harness in T-030, not here.
+    entrypoint: ["anvil"]
+    command: ["--host", "0.0.0.0", "--port", "8545", "--chain-id", "31337"]
+    ports:
+      - "${ANVIL_PORT:-8545}:8545"
+    healthcheck:
+      test: ["CMD", "cast", "block-number", "--rpc-url", "http://localhost:8545"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # ---- trading runtime (T-004 probe); not started by default ----
+  hummingbot-api:
+    image: hummingbot/hummingbot-api:latest
+    profiles: ["trading"]
+    env_file:
+      - ../.env
+    ports:
+      - "${HUMMINGBOT_API_PORT:-8000}:8000"
+    depends_on:
+      - postgres
+      - redis
+
+  gateway:
+    image: hummingbot/gateway:latest
+    profiles: ["trading"]
+    env_file:
+      - ../.env
+    ports:
+      - "${GATEWAY_PORT:-15888}:15888"
+
+volumes:
+  pgdata:
+  redisdata:

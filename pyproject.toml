@@ -1,0 +1,50 @@
+[project]
+name = "proofstand"
+version = "0.0.0"
+description = "Agent marketplace for BNB Chain with a verifiable receipt trail. See context.md."
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    # Orchestrator
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic>=2",
+    "pydantic-settings",
+    "sse-starlette",
+    # Queue + cache
+    "arq",
+    "redis",
+    # DB
+    "sqlalchemy>=2",
+    "alembic",
+    "psycopg[binary]",
+    # Chain + data
+    "web3>=7",
+    "httpx",
+    "pyyaml",
+    "pandas",
+    "pyarrow",
+    "tenacity",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "ruff",
+]
+
+[tool.pytest.ini_options]
+# packages/ and services/ are import roots; no editable install needed.
+pythonpath = [".", "packages", "services"]
+testpaths = ["tests", "packages", "services"]
+python_files = ["test_*.py", "*_test.py"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.setuptools]
+# Not a distributable package; import roots are wired via pytest pythonpath
+# and PYTHONPATH for the CLI. Nothing to build.
+py-modules = []
