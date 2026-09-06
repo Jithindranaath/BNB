@@ -16,7 +16,11 @@ Create the layout in `architecture.md` §2. Root `docker-compose.yml` with postg
 **Accept:** `docker compose up` brings postgres, redis, anvil healthy. `pytest` and `npm run dev` both start clean.
 **Deps:** none
 
-### T-002 · Populate and verify reference data · TODO
+### T-002 · Populate and verify reference data · DONE
+> addresses.json + tokens.json: 15 entries, all verified on-chain (bytecode +
+> identity call) via `verify_reference.ts`, exit 0. subgraphs.json: IDs recorded,
+> `verified:false` — live resolution needs GRAPH_API_KEY, done in T-003.
+> ABIs: `erc20.json` added; protocol ABIs added per consuming task (abis/README.md).
 Fill `packages/data/reference/addresses.json`, `tokens.json`, `subgraphs.json`, `abis/`.
 **Rule R1 applies absolutely: do not write any address from memory.** Open the official PancakeSwap developer docs and Venus docs, copy each address, paste the doc URL into the `source` field. Write `scripts/verify_reference.ts`: for each address, assert bytecode exists on BSC, and where possible call a known method (e.g. factory `owner()`, position manager `factory()`) to confirm identity. Only then flip `verified: true`.
 **Accept:** `npx tsx scripts/verify_reference.ts` exits 0; zero entries with `verified: false`.

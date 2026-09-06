@@ -1,14 +1,74 @@
 {
-  "_note": "R1: the ONLY place addresses exist. Do NOT populate from memory. T-002 fills each 'address' from the official doc named in 'source', then verify_reference.ts flips 'verified' to true after checking on-chain bytecode + identity.",
+  "_note": "R1: the ONLY place addresses exist. Populated + verified on-chain in T-002 (2026-09-07) against https://bsc-rpc.publicnode.com. 'verified' flips to true only after scripts/verify_reference.ts confirms bytecode + the identity check. Do NOT edit an address without re-running that script.",
   "bsc": {
     "chainId": 56,
     "contracts": {
-      "pancakeV3Factory":         { "address": "", "verified": false, "source": "" },
-      "pancakeV3PositionManager": { "address": "", "verified": false, "source": "" },
-      "pancakeSmartRouter":       { "address": "", "verified": false, "source": "" },
-      "pancakeQuoterV2":          { "address": "", "verified": false, "source": "" },
-      "venusComptroller":         { "address": "", "verified": false, "source": "" },
-      "multicall3":               { "address": "", "verified": false, "source": "" }
+      "pancakeV3Factory": {
+        "address": "0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865",
+        "verified": true,
+        "source": "https://github.com/pancakeswap/pancake-v3-contracts/blob/main/deployments/bscMainnet.json",
+        "identity": { "call": "feeAmountTickSpacing(uint24)(int24)", "arg": "500", "expect": "10" }
+      },
+      "pancakeV3PoolDeployer": {
+        "address": "0x41ff9AA7e16B8B1a8a8dc4f0eFacd93D02d071c9",
+        "verified": true,
+        "source": "https://github.com/pancakeswap/pancake-v3-contracts/blob/main/deployments/bscMainnet.json",
+        "identity": { "note": "no public getter; confirmed transitively — pancakeV3SwapRouter.deployer() returns this address", "bytecodeOnly": true }
+      },
+      "pancakeV3PositionManager": {
+        "address": "0x46A15B0b27311cedF172AB29E4f4766fbE7F4364",
+        "verified": true,
+        "source": "https://github.com/pancakeswap/pancake-v3-contracts/blob/main/deployments/bscMainnet.json",
+        "identity": { "call": "factory()(address)", "expect": "0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865" }
+      },
+      "pancakeV3SwapRouter": {
+        "address": "0x1b81D678ffb9C0263b24A97847620C99d213eB14",
+        "verified": true,
+        "source": "https://github.com/pancakeswap/pancake-v3-contracts/blob/main/deployments/bscMainnet.json",
+        "identity": { "call": "deployer()(address)", "expect": "0x41ff9AA7e16B8B1a8a8dc4f0eFacd93D02d071c9" }
+      },
+      "pancakeSmartRouter": {
+        "address": "0x13f4EA83D0bd40E75C8222255bc855a974568Dd4",
+        "verified": true,
+        "source": "https://developer.pancakeswap.finance/contracts/v3/addresses",
+        "source_secondary": "https://bscscan.com/address/0x13f4ea83d0bd40e75c8222255bc855a974568dd4",
+        "identity": { "call": "WETH9()(address)", "expect": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c" },
+        "note": "V2+V3+StableSwap router. Has swapExactTokensForTokens (V2 path) — used by bsc-sentry fork sim (spec.md §3.2)."
+      },
+      "pancakeV2Router": {
+        "address": "0x10ED43C718714eb63d5aA57B78B54704E256024E",
+        "verified": true,
+        "source": "https://developer.pancakeswap.finance/contracts/v2/addresses",
+        "source_secondary": "https://bscscan.com/address/0x10ed43c718714eb63d5aa57b78b54704e256024e",
+        "identity": { "call": "factory()(address)", "expect": "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73" },
+        "note": "Classic v2 router. Canonical swapExactTokensForTokens(uint,uint,address[],address,uint) — simplest interface for the honeypot sim."
+      },
+      "pancakeV2Factory": {
+        "address": "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73",
+        "verified": true,
+        "source": "https://developer.pancakeswap.finance/contracts/v2/addresses",
+        "identity": { "call": "allPairsLength()(uint256)", "expectNonZero": true }
+      },
+      "pancakeQuoterV2": {
+        "address": "0xB048Bbc1Ee6b733FFfCFb9e9CeF7375518e25997",
+        "verified": true,
+        "source": "https://github.com/pancakeswap/pancake-v3-contracts/blob/main/deployments/bscMainnet.json",
+        "identity": { "call": "factory()(address)", "expect": "0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865" }
+      },
+      "venusComptroller": {
+        "address": "0xfD36E2c2a6789Db23113685031d7F16329158384",
+        "verified": true,
+        "source": "https://docs-v4.venus.io/deployed-contracts/markets",
+        "identity": { "call": "closeFactorMantissa()(uint256)", "expectNonZero": true },
+        "note": "Unitroller proxy for the Venus Core Pool. getAllMarkets() returned 55 markets at T-002."
+      },
+      "multicall3": {
+        "address": "0xcA11bde05977b3631167028862bE2a173976CA11",
+        "verified": true,
+        "source": "https://github.com/mds1/multicall3",
+        "identity": { "call": "getBlockNumber()(uint256)", "expectNonZero": true },
+        "note": "Canonical CREATE2 deployment, identical on 250+ chains."
+      }
     }
   }
 }

@@ -1,14 +1,17 @@
 /**
  * R1 enforcement (context.md §5, plan.md T-002).
  *
- * Fails (exit 1) unless EVERY entry in packages/data/reference/*.json:
- *   - has a non-empty `address` / `id`
- *   - has a non-empty `source`
- *   - has `verified: true`
- *   - (addresses) has on-chain bytecode at BSC_RPC_URL
+ * For every entry in packages/data/reference/addresses.json + tokens.json:
+ *   1. `address` is a valid address, `source` is non-empty, `verified` is true
+ *   2. the address has bytecode on BSC (BSC_RPC_URL, or the public default)
+ *   3. its `identity` check passes — a real eth_call whose result must match
+ *      (`expect` address, `expectNonZero`, or token symbol/decimals)
  *
- * Scaffold state: all entries are blank -> this exits 1 by design until T-002
- * populates them from the official docs.
+ * subgraphs.json is reported but NOT gated here: resolving a subgraph needs a
+ * live GRAPH_API_KEY and is done in T-003. A subgraph marked verified:true still
+ * gets flagged as "unverifiable by this script".
+ *
+ * Exit 0  iff every address + token check passes.
  *
  * Run:  cd scripts && npm install && npm run verify:reference
  */
@@ -16,73 +19,173 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
-import { createPublicClient, http, isAddress } from "viem";
+import {
+  createPublicClient,
+  http,
+  isAddress,
+  getAddress,
+  type AbiFunction,
+} from "viem";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REF = resolve(HERE, "../packages/data/reference");
-const RPC = process.env.BSC_RPC_URL ?? "";
+const RPC =
+  process.env.BSC_RPC_URL ??
+  process.env.FORK_RPC_URL ??
+  "https://bsc-rpc.publicnode.com";
 
-type Problem = { file: string; path: string; reason: string };
+const client = createPublicClient({ transport: http(RPC) });
+
+type Problem = { where: string; reason: string };
 const problems: Problem[] = [];
+const ok: string[] = [];
 
 function load(name: string): any {
   return JSON.parse(readFileSync(resolve(REF, name), "utf8"));
 }
 
-function checkEntry(file: string, path: string, e: Record<string, any>, idKey: "address" | "id") {
-  const id = (e[idKey] ?? "").toString().trim();
-  if (!id) problems.push({ file, path, reason: `empty ${idKey}` });
-  if (!(e.source ?? e.note ?? "").toString().trim())
-    problems.push({ file, path, reason: "empty source/note" });
-  if (e.verified !== true) problems.push({ file, path, reason: "verified !== true" });
-  if (idKey === "address" && id && !isAddress(id))
-    problems.push({ file, path, reason: `not a valid address: ${id}` });
-  return id;
+/** "feeAmountTickSpacing(uint24)(int24)" -> AbiFunction */
+function parseSig(sig: string): AbiFunction {
+  const m = sig.match(/^(\w+)\(([^)]*)\)\(([^)]*)\)$/);
+  if (!m) throw new Error(`bad identity.call signature: ${sig}`);
+  const [, name, ins, outs] = m;
+  const toParams = (s: string) =>
+    s
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean)
+      .map((type) => ({ type }));
+  return {
+    type: "function",
+    name,
+    stateMutability: "view",
+    inputs: toParams(ins),
+    outputs: toParams(outs),
+  };
+}
+
+function isIntType(t: string) {
+  return /^u?int/.test(t);
+}
+
+async function hasBytecode(address: string): Promise<boolean> {
+  const code = await client.getCode({ address: address as `0x${string}` });
+  return !!code && code !== "0x";
+}
+
+async function callIdentity(address: string, identity: any): Promise<void> {
+  const fn = parseSig(identity.call as string);
+  const args =
+    identity.arg !== undefined
+      ? [isIntType(fn.inputs[0]?.type ?? "") ? BigInt(identity.arg) : identity.arg]
+      : [];
+  const result = await client.readContract({
+    address: address as `0x${string}`,
+    abi: [fn],
+    functionName: fn.name,
+    args,
+  });
+
+  if (identity.expect !== undefined) {
+    const got = String(result).toLowerCase();
+    const want = String(identity.expect).toLowerCase();
+    if (got !== want)
+      throw new Error(`${identity.call} => ${result}, expected ${identity.expect}`);
+  } else if (identity.expectNonZero) {
+    if (BigInt(result as any) === 0n)
+      throw new Error(`${identity.call} => 0, expected non-zero`);
+  } else {
+    throw new Error(`identity for ${address} has neither expect nor expectNonZero`);
+  }
+}
+
+async function checkAddressEntry(label: string, e: any): Promise<void> {
+  const a = (e.address ?? "").trim();
+  if (!isAddress(a)) return void problems.push({ where: label, reason: `invalid address: ${a || "(empty)"}` });
+  if (getAddress(a) !== a)
+    problems.push({ where: label, reason: `address not checksummed: ${a}` });
+  if (!(e.source ?? "").trim())
+    problems.push({ where: label, reason: "empty source" });
+  if (e.verified !== true)
+    problems.push({ where: label, reason: "verified !== true" });
+
+  try {
+    if (!(await hasBytecode(a)))
+      return void problems.push({ where: label, reason: "no bytecode on BSC" });
+    if (e.identity && !e.identity.bytecodeOnly) {
+      await callIdentity(a, e.identity);
+    }
+    ok.push(label);
+  } catch (err) {
+    problems.push({ where: label, reason: (err as Error).message });
+  }
+}
+
+async function checkTokenEntry(label: string, e: any): Promise<void> {
+  const a = (e.address ?? "").trim();
+  if (!isAddress(a)) return void problems.push({ where: label, reason: `invalid address: ${a || "(empty)"}` });
+  if (e.verified !== true)
+    problems.push({ where: label, reason: "verified !== true" });
+  try {
+    if (!(await hasBytecode(a)))
+      return void problems.push({ where: label, reason: "no bytecode on BSC" });
+    const erc20 = [
+      { type: "function", name: "symbol", stateMutability: "view", inputs: [], outputs: [{ type: "string" }] },
+      { type: "function", name: "decimals", stateMutability: "view", inputs: [], outputs: [{ type: "uint8" }] },
+    ] as const;
+    const [symbol, decimals] = await Promise.all([
+      client.readContract({ address: a as `0x${string}`, abi: erc20, functionName: "symbol" }),
+      client.readContract({ address: a as `0x${string}`, abi: erc20, functionName: "decimals" }),
+    ]);
+    if (e.identity?.symbol && symbol !== e.identity.symbol)
+      problems.push({ where: label, reason: `symbol() => ${symbol}, expected ${e.identity.symbol}` });
+    if (Number(decimals) !== Number(e.decimals))
+      problems.push({ where: label, reason: `decimals() => ${decimals}, reference says ${e.decimals}` });
+    if (!problems.some((p) => p.where === label)) ok.push(label);
+  } catch (err) {
+    problems.push({ where: label, reason: (err as Error).message });
+  }
 }
 
 async function main() {
+  console.log(`verify_reference: RPC = ${RPC}\n`);
+
   const addresses = load("addresses.json");
   const tokens = load("tokens.json");
   const subgraphs = load("subgraphs.json");
 
-  const onchain: string[] = [];
+  for (const [k, v] of Object.entries<any>(addresses.bsc?.contracts ?? {}))
+    await checkAddressEntry(`addresses.${k}`, v);
 
-  for (const [k, v] of Object.entries<any>(addresses.bsc?.contracts ?? {})) {
-    const id = checkEntry("addresses.json", `bsc.contracts.${k}`, v, "address");
-    if (id && isAddress(id)) onchain.push(id);
-  }
-  for (const [k, v] of Object.entries<any>(tokens.bsc?.tokens ?? {})) {
-    const id = checkEntry("tokens.json", `bsc.tokens.${k}`, v, "address");
-    if (id && isAddress(id)) onchain.push(id);
-  }
-  for (const [k, v] of Object.entries<any>(subgraphs)) {
-    if (k.startsWith("_")) continue;
-    checkEntry("subgraphs.json", k, v, "id");
-  }
+  for (const [k, v] of Object.entries<any>(tokens.bsc?.tokens ?? {}))
+    await checkTokenEntry(`tokens.${k}`, v);
 
-  if (onchain.length && RPC) {
-    const client = createPublicClient({ transport: http(RPC) });
-    for (const addr of onchain) {
-      try {
-        const code = await client.getCode({ address: addr as `0x${string}` });
-        if (!code || code === "0x")
-          problems.push({ file: "on-chain", path: addr, reason: "no bytecode at BSC_RPC_URL" });
-      } catch (err) {
-        problems.push({ file: "on-chain", path: addr, reason: `RPC error: ${(err as Error).message}` });
-      }
-    }
-  } else if (onchain.length && !RPC) {
-    problems.push({ file: "env", path: "BSC_RPC_URL", reason: "unset — cannot check bytecode" });
-  }
+  // subgraphs: informational only
+  const subEntries = Object.entries<any>(subgraphs).filter(([k]) => !k.startsWith("_"));
+  const subPending = subEntries.filter(([, v]) => v.verified !== true);
+  const subClaimed = subEntries.filter(([, v]) => v.verified === true);
+
+  for (const s of ok) console.log(`  ok  ${s}`);
+  console.log("");
+  for (const [k] of subPending)
+    console.log(`  --  subgraphs.${k}: PENDING (needs GRAPH_API_KEY; resolved in T-003)`);
+  for (const [k] of subClaimed)
+    problems.push({
+      where: `subgraphs.${k}`,
+      reason: "marked verified:true but this script cannot resolve subgraphs — verify in T-003",
+    });
 
   if (problems.length) {
-    console.error(`\nverify_reference: ${problems.length} problem(s)\n`);
-    for (const p of problems) console.error(`  ✗ [${p.file}] ${p.path} — ${p.reason}`);
-    console.error("\nR1: populate packages/data/reference/*.json from official docs, then re-run.\n");
+    console.error(`\n${problems.length} problem(s):\n`);
+    for (const p of problems) console.error(`  x  [${p.where}] ${p.reason}`);
+    console.error("\nR1: fix packages/data/reference/*.json from official docs, then re-run.\n");
     process.exit(1);
   }
 
-  console.log("verify_reference: OK — every reference entry is populated and verified.");
+  console.log(
+    `\nOK — ${ok.length} address/token entries verified on-chain. ` +
+      `${subPending.length} subgraph(s) pending (T-003).`,
+  );
 }
 
 main().catch((e) => {

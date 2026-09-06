@@ -1,15 +1,19 @@
 {
-  "_note": "R1: subgraph ids + gateway URL templates only. CONFIRM the id in The Graph explorer before use (decentralised network, not a hosted service). T-002 verifies.",
+  "_note": "R1: subgraph ids + gateway URL templates. IDs recorded in T-002 from The Graph Explorer, but 'verified' stays FALSE until T-003 resolves each against a real GRAPH_API_KEY and returns one pool (plan.md T-003). Live queries on The Graph decentralised network REQUIRE a key.",
+  "_status": "PENDING — needs GRAPH_API_KEY; closed by T-003",
   "pancakeswapV3Bsc": {
-    "id": "",
+    "id": "78EUqzJmEVJsAKvWghn7qotf9LVGqcTQxJhT5z84ZmgJ",
+    "id_alt": "Hv1GncLY5docZoGtXjo4kwbTvxm3MAhVZqBZE4sUT9eZ",
     "gateway": "https://gateway.thegraph.com/api/{GRAPH_API_KEY}/subgraphs/id/{id}",
     "verified": false,
-    "note": "Source the id from The Graph explorer; paste the explorer URL here."
+    "source": "https://thegraph.com/explorer/subgraphs/78EUqzJmEVJsAKvWghn7qotf9LVGqcTQxJhT5z84ZmgJ",
+    "note": "Explorer titles 78EUqz... 'PancakeSwap V3 BSC' (also the id in architecture.md §4) and Hv1Gnc... 'exchange-v3-bsc'. T-003 queries BOTH, keeps whichever returns current pool/poolDayData, records the loser here as rejected."
   },
   "venusBsc": {
     "id": "",
     "gateway": "https://gateway.thegraph.com/api/{GRAPH_API_KEY}/subgraphs/id/{id}",
     "verified": false,
-    "note": "Used for lending position history only. Live HF reads are on-chain (spec.md §7.1)."
+    "source": "https://docs-v4.venus.io/",
+    "note": "Lending position HISTORY only. Live HF reads are on-chain via venusComptroller (spec.md §7.1). Find the id in T-003; if none is maintained, drop this and use on-chain reads + BscScan for history."
   }
 }
