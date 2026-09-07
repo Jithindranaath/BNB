@@ -5,6 +5,7 @@ Uses FastAPI's TestClient against the live docker postgres, so `-m live`.
 
 from __future__ import annotations
 
+import json
 import time
 
 import pytest
@@ -109,6 +110,47 @@ def test_hire_runs_end_to_end_and_streams(client):
                   {"a": status["result"] and status["receipt"]["agent_run_id"],
                    "b": status["receipt"]["baseline_run_id"]})
         s.commit()
+
+
+def test_hire_stream_delivers_phase_events(client):
+    """T-061: consume /hires/{id}/stream as SSE and confirm phase events land,
+    ending with a terminal status — not just poll /hires/{id}."""
+    r = client.post("/hires", json={
+        "agent_id": "bnb-grid", "tier": 1,
+        "inputs": {"pair": "BNB-USDT", "capital_usd": 500, "grid_levels": 10, "risk": "balanced"},
+    })
+    assert r.status_code == 202
+    hire_id = r.json()["hire_id"]
+
+    phases: list[str] = []
+    last_status = None
+    with client.stream("GET", f"/hires/{hire_id}/stream") as s:
+        assert s.status_code == 200
+        assert "text/event-stream" in s.headers["content-type"]
+        for line in s.iter_lines():
+            if not line or not line.startswith("data:"):
+                continue
+            evt = json.loads(line[5:].strip())
+            if evt.get("phase"):
+                phases.append(evt["phase"])
+            last_status = evt.get("status", last_status)
+            if evt.get("phase") == "closed" or last_status in ("ok", "failed", "halted"):
+                break
+
+    assert "connected" not in phases  # 'connected' is a message, not a phase
+    assert {"observe", "decide", "report"} & set(phases), phases
+    assert phases[-1] in ("done", "closed")
+    assert last_status in ("ok", "failed", "halted")
+
+    # tidy up this hire's rows, keep deployment history
+    status = client.get(f"/hires/{hire_id}").json()
+    if status.get("receipt"):
+        with db.session() as s:
+            s.execute(text("DELETE FROM receipts WHERE id = :id"), {"id": status["receipt"]["id"]})
+            s.execute(text("DELETE FROM runs WHERE id IN (:a, :b)"),
+                      {"a": status["receipt"]["agent_run_id"],
+                       "b": status["receipt"]["baseline_run_id"]})
+            s.commit()
 
 
 def test_advantage_report_from_receipts(client):

@@ -199,10 +199,11 @@ Three steps max. Tier 2 shows the permission diff and spend cap before signing; 
 All of `spec.md` §8 except the SSE stream. `/healthz` reports each dependency individually.
 **Deps:** T-022, T-021
 
-### T-061 · Hire jobs + SSE · TODO
+### T-061 · Hire jobs + SSE · DONE
 arq queue, `POST /hires`, `GET /hires/{id}/stream`, cancel.
 **Accept:** a hire runs end to end and streams phase updates to a browser.
 **Deps:** T-060
+**Done:** in-process hire manager (`hires.py`, worker thread + `asyncio.Queue`, no arq process — deviation from architecture.md §2, noted). `POST /hires` (202 + per-field 422), `GET /hires/{id}`, `GET /hires/{id}/stream` (`EventSourceResponse`), `POST /hires/{id}/cancel`. `test_api.py::test_hire_stream_delivers_phase_events` consumes the SSE stream directly and asserts phase events (`observe`/`decide`/`report` … `done`/`closed`) plus a terminal status.
 
 ### T-062 · ReceiptAnchor.sol + batching · WIP (anvil-proven; mainnet anchor pending funds)
 Foundry contract per `architecture.md` §12. Orchestrator batches leaves every 10 min, submits the root. Client-side merkle proof verifier on `/receipt/[id]`.
