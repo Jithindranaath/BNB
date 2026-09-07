@@ -211,10 +211,13 @@ Foundry contract per `architecture.md` §12. Orchestrator batches leaves every 1
 **Done:** `anchor.py` (create_batch/submit_batch, sorted-pair keccak `merkle_root`/`merkle_proof` incl. odd-tail self-sibling, `verify_proof`, `proof_for`), `ANCHOR_ABI`; `scripts/anchor_receipts.py` proves deploy → `anchor()` → `BatchAnchored` → browser-shaped proof end to end on a local anvil (13-leaf batch, event root == batch root, proof verifies). `tests/test_anchor.py` 10 pass. Web `MerkleVerifier.tsx` (@noble/hashes keccak_256 re-fold) on `/receipt/[id]`, `next build` green.
 **Blocked:** BSC-mainnet anchor needs `ANCHOR_PRIVATE_KEY` + BNB for gas (same funds gate as T-041/T-043).
 
-### T-063 · Agent Advantage Report · TODO
+### T-063 · Agent Advantage Report · DONE (2 planned tasks explicitly parked)
 `/report` generated from receipts, plus PDF export. ≥3 both-ways tasks with real attached outputs, ≥1 trading/security. Any backtest labelled `BACKTEST` with its replay method stated — never silently mixed with live runs.
 **Accept:** the four tasks in `spec.md` §10 render with real data, explicit `n`, and window lengths.
 **Deps:** T-032, T-040, T-042, T-033
+**Done:** `report.py` `build_advantage_report()` — per task: `kind` (BACKTEST/LIVE), `replay_method` for replays, `time` (agent median/p90 vs baseline median, `baseline_is_human`, `speedup_x`), `cost` (gas BNB + protocol/agent fees, or explicit "simulated - $0"), `output_quality` (avg/median/best/worst Δ, win rate, verdict), `evaluation_window_days` (from the agent's own result) vs `receipts_span_days`, `distinct_snapshots`, and up to 12 `/receipt/<id>` links per task. `planned[]` renders all 4 spec §10 tasks with `status` + `reason`. `build_advantage_pdf()` (fpdf2) → `GET /report/advantage.pdf`. Web `/report` rebuilt as per-task cards + planned section + PDF link (`next build` green). Tests: `test_api.py::test_advantage_report_from_receipts` + `::test_advantage_report_pdf`.
+**3 both-ways tasks with real receipts:** bnb-grid (grid, BACKTEST, n=9, 1d window), pcs-rebalancer (rebalancing, BACKTEST, n=4, ~2d), venus-guard (health_factor, BACKTEST, n=2, 365d stress path on real ETH history). `meets_min_3_bothways` and `has_trading_or_security` both true.
+**Parked (shown as `not yet run` with reason):** bsc-sentry — baseline is a human analyst timed with a stopwatch (`fixtures/manual_baselines.json`); no real audit recorded, R2/R3 forbid fabricating one. pcs-yield — held on a working Graph query key (T-033).
 
 ---
 

@@ -118,6 +118,7 @@ export const api = {
   activity: (limit = 20) => get<Receipt[]>(`/activity?limit=${limit}`, []),
   receipt: (id: string) => get<ReceiptDetail | null>(`/receipts/${id}`, null),
   report: () => get<Record<string, unknown> | null>("/report/advantage", null),
+  reportPdfUrl: `${ORCHESTRATOR_URL}/report/advantage.pdf`,
   hire: (id: string) => get<HireStatus | null>(`/hires/${id}`, null),
   async createHire(body: { agent_id: string; tier: number; inputs: Record<string, unknown> }) {
     const res = await fetch(`${ORCHESTRATOR_URL}/hires`, {

@@ -129,6 +129,19 @@ def advantage_report() -> Any:
     return build_advantage_report()
 
 
+@router.get("/report/advantage.pdf")
+def advantage_report_pdf() -> Any:
+    from fastapi import Response
+
+    from .report import build_advantage_pdf
+
+    return Response(
+        content=build_advantage_pdf(),
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'inline; filename="agent-advantage-report.pdf"'},
+    )
+
+
 # --- health -----------------------------------------------------
 
 @router.get("/healthz", response_model=HealthReport)

@@ -221,6 +221,8 @@ class VenusGuardAgent(Agent):
                 "trigger_hf": d.params["trigger_hf"],
                 "dominant_collateral": self._obs_data["dominant_collateral"],
                 "stress_pair": self._obs_data["stress_pair"],
+                "stress_days": self.stress_days,
+                "stress_worst_drawdown": self._obs_data.get("stress_worst_drawdown"),
                 "no_action": na.as_dict(),
                 "guarded": g.as_dict(),
                 "position": {

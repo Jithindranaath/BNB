@@ -138,6 +138,7 @@ pandas:          3.0.5
 pyarrow:         25.0.1
 tenacity:        9.1.4
 pyyaml:          6.0.3
+fpdf2:           2.8.5   (added T-063 — GET /report/advantage.pdf; pure-Python, no system libs)
 pytest:          9.1.1   (pytest-asyncio 1.4.0)
 ruff:            0.16.6
 ```

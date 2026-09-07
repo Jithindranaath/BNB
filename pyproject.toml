@@ -24,6 +24,8 @@ dependencies = [
     "pandas",
     "pyarrow",
     "tenacity",
+    # Reports
+    "fpdf2",
 ]
 
 [project.optional-dependencies]

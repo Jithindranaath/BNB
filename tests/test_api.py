@@ -114,8 +114,40 @@ def test_hire_runs_end_to_end_and_streams(client):
 def test_advantage_report_from_receipts(client):
     rep = client.get("/report/advantage").json()
     assert rep["generated_from"].startswith("receipts")
-    assert "tasks" in rep and isinstance(rep["tasks"], list)
-    assert "methodology" in rep
-    # with the paper loops running there should be >=1 trading task
-    if rep["tasks"]:
-        assert all({"agent_id", "metric", "n", "avg_delta"} <= set(t) for t in rep["tasks"])
+    assert isinstance(rep["tasks"], list)
+    assert "methodology" in rep and "generated_at" in rep
+    # every spec §10 task is accounted for, run or not
+    planned_ids = {p["agent_id"] for p in rep["planned"]}
+    assert planned_ids == {"bnb-grid", "bsc-sentry", "pcs-rebalancer", "pcs-yield"}
+    for p in rep["planned"]:
+        assert p["status"] in ("has receipts", "not yet run")
+        if p["status"] == "not yet run":
+            assert p["reason"]  # never a silent gap
+
+    for t in rep["tasks"]:
+        assert {"agent_id", "metric", "n", "kind", "time", "cost", "output_quality",
+                "outputs", "evaluation_window_days", "receipts_span_days"} <= set(t)
+        assert t["kind"] in ("BACKTEST", "LIVE")
+        assert t["both_ways"] is True
+        assert len(t["outputs"]) == min(t["n"], 12)
+        for o in t["outputs"]:
+            assert o["url"] == f"/receipt/{o['receipt_id']}"
+        # a backtest must state its replay method; a live run must not carry one
+        assert (t["replay_method"] is not None) == (t["kind"] == "BACKTEST"
+                                                    and t["category"] in
+                                                    ("grid", "rebalancing", "health_factor"))
+        # simulated runs report $0, never a made-up gas number
+        if not t["cost"]["on_chain"]:
+            assert t["cost"]["agent_gas_bnb"] == 0 and t["cost"]["note"]
+
+    # backtests are listed apart from live numbers, never blended
+    assert set(rep["backtested_tasks"]) == {
+        t["agent_id"] for t in rep["tasks"] if t["kind"] == "BACKTEST"
+    }
+
+
+def test_advantage_report_pdf(client):
+    r = client.get("/report/advantage.pdf")
+    assert r.status_code == 200
+    assert r.headers["content-type"] == "application/pdf"
+    assert r.content[:5] == b"%PDF-" and len(r.content) > 1000

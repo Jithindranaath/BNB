@@ -157,14 +157,16 @@ Stop and surface it (don't work around it silently) when:
 > Exactly one line. Update it at the OPEN step of every task.
 
 ```
-PHASE:  4 — Trading agents   (T-033 pcs-yield HELD for Graph key)
-TASK:   T-040 · bnb-grid Tier 1 (paper)   ** must be RUNNING LIVE by end of day 2 **
+PHASE:  7 — Ship   (Phases 5 & 6 done; T-033 pcs-yield HELD for Graph key)
+TASK:   T-070 · deploy (web → Vercel, orchestrator + runtime → a host)
 STATE:  TODO (next)
-NEXT:   T-042 pcs-rebalancer Tier 1, T-044 venus-guard
-NOTE:   T-033 pcs-yield blocked on a working Graph query key (3 rejected).
-        gas: v3-NPM/venus units still to measure (T-042/44 — gas_cost_usd raises).
+NEXT:   T-071 full acceptance pass, T-072 demo rehearsal
+NOTE:   Funds gate still open: T-041 (grid live), T-043 (rebalancer live),
+        T-062 mainnet anchor — all proven on anvil forks / local anvil.
+        T-033 pcs-yield blocked on a working Graph query key.
+        Paper loop must run in a REAL terminal (OOM reaper kills bg processes):
+          python scripts/run_paper_loops.py --interval 600
         DB/redis: 127.0.0.1, never localhost. Long cmds: logfile + Monitor, not `| tail`.
-        Public dataseed rate-limits a shared anvil fork after ~10 tokens -> per-item forks.
 ```
 
 ---
@@ -467,6 +469,43 @@ NOTE:   T-033 pcs-yield blocked on a working Graph query key (3 rejected).
   stats function against real rows.
 - Suite **53 pass / 1 skip**, ruff clean.
 - Next: **T-030** Anvil fork sim harness (Phase 3).
+
+---
+
+### 2026-09-07 · T-062 + T-063 · Phase 6 (anchor + advantage report)
+- **T-062** `orchestrator/anchor.py` — `create_batch()` / `submit_batch()`,
+  sorted-pair keccak `merkle_root` / `merkle_proof` (odd-tail node pairs with
+  itself — that was the first bug), `verify_proof`, `proof_for(receipt_id)` for
+  the `/receipt` page. `scripts/anchor_receipts.py` proves the whole flow on a
+  local anvil: deploy ReceiptAnchor → `anchor(batchId, root, count)` →
+  `BatchAnchored` event → recompute the proof the browser way → event root ==
+  batch root, proof verifies. Web `MerkleVerifier.tsx` re-folds leaf+proof with
+  `@noble/hashes` keccak_256 and compares to the anchored root (verify the hash,
+  not the dashboard). `tests/test_anchor.py` 10 pass. **BSC-mainnet anchor still
+  pending `ANCHOR_PRIVATE_KEY` + gas** — same funds gate as T-041/T-043.
+- **T-063** `orchestrator/report.py` rewritten. Per task: `kind` BACKTEST/LIVE,
+  `replay_method` for replays, `time` (agent median/p90 vs baseline median,
+  `baseline_is_human`, `speedup_x`), `cost` (gas BNB + protocol/agent fees, or an
+  explicit "simulated - $0" — never a made-up gas number), `output_quality`
+  (avg/median/best/worst Δ, win rate, verdict), `evaluation_window_days` (from the
+  agent's own result, not the receipt timestamp span) vs `receipts_span_days`,
+  and up to 12 `/receipt/<id>` links. `planned[]` renders all four spec §10 tasks
+  with `status` + `reason`. `build_advantage_pdf()` (fpdf2 2.8.5, pinned) →
+  `GET /report/advantage.pdf`. Web `/report` rebuilt as per-task cards + planned
+  section + PDF link.
+- Seeded a real **venus-guard** both-ways receipt (real BSC borrower
+  `0x2221…ca14`, 365-day ETH stress path → liquidated -$156.11, guard saves
+  $155.99). Now **3 both-ways tasks with real receipts**: bnb-grid,
+  pcs-rebalancer, venus-guard — all BACKTEST. `meets_min_3_bothways` +
+  `has_trading_or_security` both true.
+- **Parked, shown explicitly in the report:** bsc-sentry (baseline is a
+  stopwatch'd human analyst — no real audit recorded, R2/R3 forbid inventing
+  one); pcs-yield (T-033, held on a working Graph key).
+- Added a `stress_days` / `stress_worst_drawdown` field to venus-guard's result
+  outputs so the report can show the real evaluation window.
+- `test_api.py` advantage tests rewritten + a PDF test added. venus/anchor/
+  harness/registry suites green, ruff clean, `next build` green.
+- Next: **Phase 7** — T-070 deploy, T-071 acceptance pass, T-072 demo rehearsal.
 
 ---
 
