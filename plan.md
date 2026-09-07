@@ -235,8 +235,13 @@ Front end to Vercel, orchestrator + runtime to a VPS or AWS. Public URL. `/healt
 - `docs/deploy.md` — full runbook: Render blueprint, Vercel import (root dir `apps/web`, `NEXT_PUBLIC_ORCHESTRATOR_URL` at build time), CORS wire-back, phone acceptance check, rollback, free-tier caveats (Render idle sleep ~50 s cold; free PG 30-day expiry → Neon swap; no persistent disk → kline cache rebuilds).
 **Remaining (needs the user):** push to GitHub, run the Render Blueprint, import to Vercel, set the two URLs, run the phone acceptance check. Redis / Hummingbot / Gateway not deployed by design.
 
-### T-071 · Full acceptance pass · TODO
+### T-071 · Full acceptance pass · DONE
 Walk every item in `spec.md` §11 and record pass/fail honestly in `docs/acceptance.md`. A failure recorded is worth more than a pass faked.
+**Result:** `docs/acceptance.md` — **5 PASS, 4 PARTIAL, 0 faked**. Each item verified by running the named command/test.
+- PASS: #1 cold `data pull` (720 real candles, 0.53s) · #2 `verify_reference` (15/15 on-chain) · #3 `decide()` purity · #4 Tier 0/1 cannot sign · #7 every UI perf number carries n+window · #9 `/report` 3 both-ways + PDF.
+- PARTIAL (all on known blockers): #5 3/5 agents have both-ways receipts (bsc-sentry needs a real human `manual_analyst` audit; pcs-yield held on Graph key) · #6 sentry verdict path works on real BSC but no public URL yet + marketplace hire fails at the baseline step · #8 anchor flow proven on local anvil, mainnet needs `ANCHOR_PRIVATE_KEY` + gas · #10 `/healthz` reports every dep (pass) but public URL not deployed.
+**Fixed during the pass:** `tests/test_db_migration.py` was running `alembic downgrade base` / `upgrade head` against the **dev DB** — dropped `runs`+`receipts` on every `-m live` run. Rewritten to use a throwaway `proofstand_migtest` database; a full live run now leaves receipts intact. Re-seeded the 3 agents' receipts.
+**Suite:** 111 passed, 1 skipped (subgraph, needs `GRAPH_API_KEY`).
 
 ### T-072 · Demo rehearsal · TODO
 Rehearse the 90-second path cold, three times: land → sentry (no wallet) → yield with the sentry exclusion visible → grid receipt with drawdown → anchored proof. Time it.

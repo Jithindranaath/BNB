@@ -1,13 +1,15 @@
 """T-021 acceptance: the Alembic migration builds architecture.md §7 cleanly and
 `runs` is a TimescaleDB hypertable. Needs the docker postgres (timescaledb) up.
 
-Runs downgrade->base then upgrade->head on the dev DB (fast: the timescaledb
-extension is already installed), asserts the schema, and leaves it at head.
+Runs downgrade->base then upgrade->head against a THROWAWAY database created for
+this test (dropped afterwards), so the suite never touches the dev DB's runs /
+receipts — those are the data the acceptance pass and /report depend on.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
+from urllib.parse import urlsplit, urlunsplit
 
 import pytest
 from alembic import command
@@ -20,13 +22,36 @@ pytestmark = pytest.mark.live
 
 REPO = Path(__file__).resolve().parents[1]
 OUR_TABLES = {"agents", "runs", "receipts", "agent_stats"}
+SCRATCH_DB = "proofstand_migtest"
+
+
+def _swap_db(url: str, dbname: str) -> str:
+    parts = urlsplit(url)
+    return urlunsplit((parts.scheme, parts.netloc, "/" + dbname, parts.query, parts.fragment))
 
 
 @pytest.fixture
-def alembic_cfg() -> Config:
+def scratch_url() -> str:
+    """A fresh empty database, dropped on teardown."""
+    admin_url = _swap_db(config().database_url, "postgres")
+    scratch = _swap_db(config().database_url, SCRATCH_DB)
+    admin = create_engine(admin_url, future=True, isolation_level="AUTOCOMMIT")
+    with admin.connect() as c:
+        c.execute(text(f'DROP DATABASE IF EXISTS "{SCRATCH_DB}" WITH (FORCE)'))
+        c.execute(text(f'CREATE DATABASE "{SCRATCH_DB}"'))
+    try:
+        yield scratch
+    finally:
+        with admin.connect() as c:
+            c.execute(text(f'DROP DATABASE IF EXISTS "{SCRATCH_DB}" WITH (FORCE)'))
+        admin.dispose()
+
+
+@pytest.fixture
+def alembic_cfg(scratch_url) -> Config:
     cfg = Config(str(REPO / "alembic.ini"))
     cfg.set_main_option("script_location", str(REPO / "migrations"))
-    cfg.set_main_option("sqlalchemy.url", config().database_url)
+    cfg.set_main_option("sqlalchemy.url", scratch_url)
     return cfg
 
 
@@ -37,15 +62,10 @@ def _public_tables(conn) -> set[str]:
     return set(rows)
 
 
-def test_migration_clean_and_hypertable(alembic_cfg):
-    eng = create_engine(config().database_url, future=True)
-
-    command.downgrade(alembic_cfg, "base")
-    with eng.connect() as c:
-        assert OUR_TABLES.isdisjoint(_public_tables(c)), "downgrade left tables behind"
+def test_migration_clean_and_hypertable(alembic_cfg, scratch_url):
+    eng = create_engine(scratch_url, future=True)
 
     command.upgrade(alembic_cfg, "head")
-
     with eng.connect() as c:
         assert OUR_TABLES <= _public_tables(c)
 
@@ -77,9 +97,7 @@ def test_migration_clean_and_hypertable(alembic_cfg):
 
         # kind/status CHECK constraints are enforced
         c.execute(
-            text(
-                "INSERT INTO agents (id, category, manifest) VALUES ('x','security','{}'::jsonb)"
-            )
+            text("INSERT INTO agents (id, category, manifest) VALUES ('x','security','{}'::jsonb)")
         )
         with pytest.raises(IntegrityError):
             c.execute(
@@ -92,3 +110,8 @@ def test_migration_clean_and_hypertable(alembic_cfg):
                 )
             )
         c.rollback()
+
+    command.downgrade(alembic_cfg, "base")
+    with eng.connect() as c:
+        assert OUR_TABLES.isdisjoint(_public_tables(c)), "downgrade left tables behind"
+    eng.dispose()

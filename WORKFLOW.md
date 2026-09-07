@@ -157,12 +157,11 @@ Stop and surface it (don't work around it silently) when:
 > Exactly one line. Update it at the OPEN step of every task.
 
 ```
-PHASE:  7 — Ship   (Phases 5 & 6 done; T-033 pcs-yield HELD for Graph key)
-TASK:   T-070 · deploy — artifacts built + locally proven; hosted deploy needs the user
-STATE:  WIP (Dockerfile/entrypoint/render.yaml/vercel.json/docs/deploy.md done;
-        migration made Postgres-portable; image ran green against local PG)
-NEXT:   user pushes to GitHub + runs Render Blueprint + Vercel import (docs/deploy.md),
-        then T-071 full acceptance pass, T-072 demo rehearsal
+PHASE:  7 — Ship   (T-070 WIP-needs-user, T-071 done; T-033 pcs-yield HELD for Graph key)
+TASK:   T-072 · demo rehearsal (next) — time the 90-second cold path 3x
+STATE:  T-071 DONE (docs/acceptance.md: 5 PASS / 4 PARTIAL / 0 faked)
+NEXT:   T-072; and the user completes T-070 (GitHub push -> Render Blueprint ->
+        Vercel import -> URL wiring -> phone check, per docs/deploy.md)
 NOTE:   Free stack: orchestrator → Render free Docker web service + Render/Neon free
         Postgres (Timescale optional now); web → Vercel; NO Redis (cache self-bypasses).
         Funds gate still open: T-041, T-043, T-062 mainnet anchor (anvil-proven).
@@ -544,6 +543,32 @@ NOTE:   Free stack: orchestrator → Render free Docker web service + Render/Neo
   redis down tolerated), `/agents` real. Suite **111 pass / 1 skip**, ruff clean.
 - **Remaining is the user's:** push to GitHub, run the Render Blueprint, import to
   Vercel, set the two URLs, do the phone check. Then T-071 / T-072.
+
+---
+
+### 2026-09-07 · T-071 · full acceptance pass (spec.md §11)
+- `docs/acceptance.md` — every item verified by running the named command/test,
+  not from memory. **5 PASS, 4 PARTIAL, 0 faked.**
+  - PASS: #1 cold `data pull` 720 real candles 0.53 s · #2 `verify_reference`
+    15/15 on-chain · #3 `decide()` purity · #4 Tier 0/1 cannot sign · #7 every UI
+    perf number carries n + window · #9 `/report` 3 both-ways + PDF.
+  - PARTIAL, all on already-tracked blockers: #5 3/5 agents have both-ways
+    receipts (bsc-sentry needs a real human `manual_analyst` audit in
+    fixtures/manual_baselines.json; pcs-yield held on the Graph key) · #6 sentry
+    verdict path is green on real BSC but there is no public URL yet and a
+    marketplace hire fails at the baseline step for un-audited tokens · #8 anchor
+    flow proven on a local anvil, mainnet needs ANCHOR_PRIVATE_KEY + gas · #10
+    `/healthz` reports every dep (pass) but the public URL is not deployed.
+- **Bug found + fixed:** `tests/test_db_migration.py` ran `alembic downgrade base`
+  / `upgrade head` against the **dev DB** via `config().database_url` — it dropped
+  `runs` + `receipts` on every `-m live` run, silently wiping the data `/report`
+  and the acceptance pass depend on (this is why the T-070 background `pytest -q`
+  emptied the DB). Rewrote it to CREATE / DROP a throwaway `proofstand_migtest`
+  database (admin connection to the `postgres` db, AUTOCOMMIT). The dev DB is no
+  longer touched by the suite — verified a full `-m live` run leaves all receipts
+  intact. Re-seeded bnb-grid (5) + pcs-rebalancer (5) + venus-guard (1).
+- Suite: 70 non-live + 41 live pass, 1 skip (subgraph / GRAPH_API_KEY). ruff clean.
+- Next: **T-072** demo rehearsal; user finishes the hosted half of T-070.
 
 ---
 
