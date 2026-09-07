@@ -170,6 +170,21 @@ def _favorable(metric: str, delta: float) -> bool:
     return delta < 0 if metric in _LOWER_IS_BETTER else delta > 0
 
 
+def recent_receipts(limit: int = 20) -> list[ReceiptOut]:
+    with db.session() as s:
+        rows = s.execute(
+            text(
+                """
+                SELECT r.*, ar.agent_id AS agent_id
+                FROM receipts r JOIN runs ar ON ar.id = r.agent_run_id
+                ORDER BY r.created_at DESC LIMIT :lim
+                """
+            ),
+            {"lim": limit},
+        ).mappings().all()
+    return [_receipt_out(row) for row in rows]
+
+
 def categories() -> list[CategoryOut]:
     counts: dict[str, int] = {}
     for e in registry.load_registry().values():

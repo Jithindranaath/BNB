@@ -49,6 +49,11 @@ def list_categories() -> Any:
     return queries.categories()
 
 
+@router.get("/activity", response_model=list[ReceiptOut])
+def activity(limit: int = Query(20, ge=1, le=100)) -> Any:
+    return queries.recent_receipts(limit)
+
+
 # --- hires ---------------------------------------------------------
 
 @router.post("/hires", response_model=HireCreated, status_code=202)
