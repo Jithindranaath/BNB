@@ -308,6 +308,15 @@ NOTE:   T-033 pcs-yield blocked on a working Graph query key (3 rejected).
   logfile + Monitor for long commands, not `... | tail`.
 - Suite 35 pass / 1 skip, ruff clean. **Gate 2 in progress** (T-022–024 next).
 
+### 2026-09-07 · OOM: paper loops consolidated into one process
+- The two separate paper-loop processes (grid + rebalancer) were OOM-killed
+  ~1h in (each ~200 MB: pandas + web3 + pydantic, on top of Docker's ~600 MB).
+  Deployment state (`var/*.json`) survived: grid at cycle 15, rebalancer at 4.
+- `scripts/run_paper_loops.py` now cycles BOTH agents in a single interpreter,
+  resuming from `var/*.json` (never resets). Relaunched at a 10-min interval;
+  grid resumed at cycle 17, rebalancer at cycle 6.
+- If it dies again: `python scripts/run_paper_loops.py --interval 600`.
+
 ### 2026-09-07 · T-044 venus-guard · DONE  (the dramatic receipt)
 - `venus.account_health(account)` — real on-chain HF: per-market `balanceOf x
   exchangeRateStored` (supply), `borrowBalanceStored` (borrow), `markets().cf`,
