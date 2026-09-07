@@ -19,34 +19,31 @@
       "verified": true
     },
     "v3_mint": {
-      "gas": null,
-      "verified": false,
-      "note": "measured in T-042 (NonfungiblePositionManager)"
+      "gas": 390300,
+      "verified": true
     },
     "v3_increase_liquidity": {
-      "gas": null,
-      "verified": false,
-      "note": "measured in T-042"
+      "gas": 167217,
+      "verified": true
     },
     "v3_decrease_liquidity": {
-      "gas": null,
-      "verified": false,
-      "note": "measured in T-042"
+      "gas": 161006,
+      "verified": true
     },
     "v3_collect": {
-      "gas": null,
-      "verified": false,
-      "note": "measured in T-042"
+      "gas": 84419,
+      "verified": true
     },
     "v3_burn": {
-      "gas": null,
-      "verified": false,
-      "note": "measured in T-042"
+      "gas": 70557,
+      "verified": true
     },
     "venus_repay_borrow": {
       "gas": null,
       "verified": false,
       "note": "measured in T-044"
     }
-  }
+  },
+  "v3_measured_at_block": 120503023,
+  "v3_measured_at": "2026-09-07T13:33:13.244650+00:00"
 }

@@ -43,7 +43,7 @@ def test_hodl_baseline():
     assert abs(r.value - (expected_gross - r.outputs["gas_usd"])) < 1e-6
 
 
-def test_static_range_baseline_flags_unmeasured_gas():
+def test_static_range_baseline_fees_minus_il_minus_gas():
     m = _manifest("pcs-rebalancer")
     pdd = [{"feesUSD": 500, "tvlUSD": 1_000_000} for _ in range(30)]
     obs = _obs(pool_day_datas=pdd, vol_annual=0.6, inputs={"capital_usd": 10_000},
@@ -51,8 +51,17 @@ def test_static_range_baseline_flags_unmeasured_gas():
     r = baselines.run_baseline("static_range", obs, m)
     assert r.metric == "net_fees_usd" and r.unit == "USD"
     assert r.outputs["fees_usd"] > 0 and r.outputs["il_usd"] > 0
-    assert "UNMEASURED" in r.outputs["gas_term"]  # v3 gas not measured yet (T-042)
-    assert r.value == pytest.approx(r.outputs["fees_usd"] - r.outputs["il_usd"])
+    assert r.outputs["gas_usd"] > 0  # v3 mint+burn gas measured in T-043
+    assert r.value == pytest.approx(
+        r.outputs["fees_usd"] - r.outputs["il_usd"] - r.outputs["gas_usd"]
+    )
+
+
+def test_static_range_baseline_accepts_fee_apr_shortcut():
+    m = _manifest("pcs-rebalancer")
+    obs = _obs(fee_apr=0.20, vol_annual=0.6, inputs={"capital_usd": 10_000}, horizon_days=7)
+    r = baselines.run_baseline("static_range", obs, m)
+    assert r.outputs["fee_apr"] == 0.20 and r.outputs["fees_usd"] > 0
 
 
 def test_top_headline_apr_baseline():

@@ -78,26 +78,31 @@ def baseline_hodl(obs: Observation, manifest: Manifest) -> Result:
 
 
 def baseline_static_range(obs: Observation, manifest: Manifest) -> Result:
-    """needs obs.data: `pool_day_datas` (for fee APR), `vol_annual`,
-    `inputs.capital_usd`, `horizon_days`. Full-range position => fees over the
-    horizon minus expected IL. The entry/exit gas term is added when v3 gas units
-    are measured (T-042); until then it is flagged, not guessed."""
-    (pdd, vol, inputs, horizon) = _need(
-        obs, "pool_day_datas", "vol_annual", "inputs", "horizon_days"
-    )
+    """One full-range v3 position at t0, never touched. Fees over the horizon
+    minus expected IL minus one mint+burn of gas.
+
+    needs obs.data: `vol_annual`, `inputs.capital_usd`, `horizon_days`, and the
+    fee rate as either `fee_apr` (a fraction, from DefiLlama) or `pool_day_datas`
+    (rows the calibrate.fee_apr() helper understands)."""
+    (vol, inputs, horizon) = _need(obs, "vol_annual", "inputs", "horizon_days")
     capital = float(inputs["capital_usd"])
     horizon = float(horizon)
-    apr = fee_apr(pdd)
+
+    if "fee_apr" in obs.data:
+        apr = float(obs.data["fee_apr"])
+    else:
+        (pdd,) = _need(obs, "pool_day_datas")
+        apr = fee_apr(pdd)
+
     fees = capital * apr * horizon / 365.0
-    il = il_estimate(float(vol), horizon, range_width_pct=0.999999)  # ~full range
-    il_usd = capital * il
+    il_usd = capital * il_estimate(float(vol), horizon, range_width_pct=0.999999)  # ~full range
     outputs: dict[str, Any] = {"fee_apr": apr, "fees_usd": fees, "il_usd": il_usd}
     try:
         gas = gas_cost_usd("v3_mint") + gas_cost_usd("v3_burn")
         outputs["gas_usd"] = gas
-    except GasUnitUnmeasured:
+    except GasUnitUnmeasured:  # pragma: no cover - v3 gas measured in T-043
         gas = 0.0
-        outputs["gas_term"] = "UNMEASURED — v3 NPM gas units land in T-042"
+        outputs["gas_term"] = "UNMEASURED"
     return _metric(manifest, fees - il_usd - gas, **outputs)
 
 

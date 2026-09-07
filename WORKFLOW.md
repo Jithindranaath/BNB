@@ -308,6 +308,35 @@ NOTE:   T-033 pcs-yield blocked on a working Graph query key (3 rejected).
   logfile + Monitor for long commands, not `... | tail`.
 - Suite 35 pass / 1 skip, ruff clean. **Gate 2 in progress** (T-022–024 next).
 
+### 2026-09-07 · T-042 + T-043 pcs-rebalancer · WIP (T-042 deployable, T-043 fork-proven)
+- **T-042** `pcs_rebalancer/range.py` `select_range()` (§6.1: `m(risk)*vol*sqrt(h/365)`
+  half-width, `exp(±hw)` bounds, snap to tick spacing). `economics.py`
+  `rebalance_decision()` (§6.2, pure): `act` iff `expected_fees - realised_IL -
+  gas > 0`; else the "holding: rebalance not economic — $X vs $Y expected"
+  string. `sim.simulate_rebalancer()` — checkpoint loop, every decision (hold
+  included) logged with its arithmetic. `agent.PcsRebalancerAgent` — fee APR
+  from **DefiLlama** (subgraph is key-blocked; DefiLlama `apyBase` is a fine
+  substitute), vol from BNB/USDT klines (scale-invariant), scoped to
+  WBNB/<USD-stable> pools. `scripts/run_rebalancer.py --loop` mirrors run_grid.
+  Tests: range, BOTH §6.2 branches, sim both branches, paper hire vs
+  `static_range`, decide purity.
+- **T-043** `pcs_rebalancer/npm.py` — hand-rolled NonfungiblePositionManager
+  (decreaseLiquidity → collect → burn → mint via web3; tokenId via
+  `tokenOfOwnerByIndex`). `scripts/measure_v3_gas.py` ran the full
+  open→increaseLiquidity→close lifecycle on an Anvil BSC fork and wrote the 5 v3
+  gas units to `fixtures/gas_units.json` (v3_mint 390300, increase 167217,
+  decrease 161006, collect 84419, burn 70557 — all now verified:true).
+  `tests/test_v3_position.py` asserts the lifecycle on a fork. Path decision:
+  hand-rolled NPM primary, Gateway the documented alternative (T-004).
+  **Mainnet dry run with real funds still pending** (same as T-041).
+- Knock-on: `gas_cost_usd("v3_*")` now returns real numbers; `static_range`
+  baseline's gas term is real; 2 tests that asserted "unmeasured" updated to
+  point at `venus_repay_borrow` (still T-044).
+- `baseline_static_range` gained a `fee_apr` short-circuit (obs.data["fee_apr"])
+  so the agent can feed the DefiLlama rate without raw poolDayDatas.
+- Suite non-live 53 pass; live rebalancer + v3 tests pass. ruff clean.
+- Next: deploy `run_rebalancer.py --loop`; then T-044 venus-guard.
+
 ### 2026-09-07 · T-040 bnb-grid Tier 1 (paper) · WIP — DEPLOYED + LOOPING
 - `bnb_grid/grid.py` `calibrate_grid()` (spec §5.1: k(risk)*atr/mid spacing_frac,
   10/90 pct bounds, clamp levels 5–30, capital/levels per slot). Pure.

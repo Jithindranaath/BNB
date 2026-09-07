@@ -151,12 +151,12 @@ Generate a Hummingbot grid controller config, POST it via the Hummingbot API, st
 **Accept:** a live bot places and fills at least one real order; receipt reflects real gas and fees.
 **Deps:** T-040, T-004
 
-### T-042 · `pcs-rebalancer` Tier 1 · TODO
+### T-042 · `pcs-rebalancer` Tier 1 · WIP
 Range selection §6.1 and the cost-aware rebalance rule §6.2. The "holding — rebalance not economic, $X cost vs $Y expected" path must be implemented and visible, not just the act path.
 **Accept:** paper position tracks a real pool for ≥6h; both the rebalance and the decline-to-rebalance branches are exercised in tests.
 **Deps:** T-022, T-023, T-012
 
-### T-043 · `pcs-rebalancer` Tier 2 · TODO
+### T-043 · `pcs-rebalancer` Tier 2 · WIP
 Execution via `NonfungiblePositionManager` (viem) or Gateway, per the T-004 finding.
 **Accept:** opens, adjusts, and closes a real small position on BSC; gas recorded from the receipts.
 **Deps:** T-042, T-004
