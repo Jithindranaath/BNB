@@ -158,10 +158,10 @@ Stop and surface it (don't work around it silently) when:
 
 ```
 PHASE:  1 — Data layer
-TASK:   T-011 · Cache + CLI
+TASK:   T-012 · Calibration functions
 STATE:  TODO (next)
-NEXT:   T-012 calibration functions
-NOTE:   subgraph.py still needs a Graph *query* API key (deploy key was supplied)
+NEXT:   Phase 2 — T-020 agent base + manifest loader
+NOTE:   subgraph.py still needs a working Graph query API key (two rejected so far)
 ```
 
 ---
@@ -236,6 +236,27 @@ NOTE:   subgraph.py still needs a Graph *query* API key (deploy key was supplied
 - Bugs caught: PCS v3 `slot0().feeProtocol` is uint32 not uint8; retry must not
   catch 4xx; multicall retries only the eth_call across providers, not the decode.
 - Next: **T-011** cache + CLI.
+
+### 2026-09-07 · T-011 cache + CLI · DONE
+- 2nd Graph key (`a659…0db6`) also rejected — `auth error: API key not found`
+  via direct curl (path-key AND `Authorization: Bearer`). Not an endpoint issue;
+  the key string isn't in The Graph's system. Still not blocking. `.env` holds it.
+- **packaging fixed**: `pyproject` now maps `packages/` + `services/` as install
+  roots → `pip install -e .` exposes `data`, `agents.*`, `orchestrator` with no
+  PYTHONPATH; `data` console script + `python -m data` both work.
+- **cache.py**: `read_klines(pair,interval,days,refresh=)` → parquet at
+  `.cache/klines/{SYMBOL}_{interval}.parquet`, append-tail only (computes
+  start_ms from last cached open_time), `_merge` dedupes on open_time + sorts,
+  `_window` slices to the requested span. `hot_json(key,ttl,producer)` → redis
+  JSON with `_redis_down` bypass; `TTL` per §5.
+- **cli.py**: `data pull [--pair --days --interval --cached]`, `data info`.
+- **Acceptance:** cold 30d/1h **0.94s** (<60s), warm **0.55s** (<2s),
+  cached-only **0.05s**; truncate-then-refresh restores 720 rows, 0 dupes,
+  monotonic. redis hot_json round-trips. tests/test_cache.py (5) — suite 15 pass
+  / 1 skip, ruff clean.
+- Note: "survives container restart" — our cache is on the host fs, so it
+  survives process restarts trivially (proved by the cached-only run).
+- Next: **T-012** calibration.
 
 ---
 

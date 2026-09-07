@@ -61,7 +61,12 @@ Bring up `hummingbot-api` + `gateway`. Determine whether Gateway can *write* to 
 **Accept:** unit test per source hitting the live API and asserting a non-empty typed result.
 **Deps:** T-003
 
-### T-011 · Cache + CLI · TODO
+### T-011 · Cache + CLI · DONE
+> `cache.read_klines()` — parquet per `{SYMBOL}_{interval}`, append-tail only
+> (truncate→restore test: no dupes, monotonic). Cold 30d/1h **0.94s**, warm
+> **0.55s**, cached-only **0.05s**. `cache.hot_json(key,ttl,producer)` — redis
+> with graceful bypass; TTLs per §5. `python -m data pull|info` (+ editable
+> install now exposes `data`, `agents.*`, `orchestrator`). tests/test_cache.py.
 `cache.py`: parquet on disk for klines/poolDayDatas (append tail only, never refetch history), redis for hot state with per-source TTLs from `architecture.md` §5. `cli.py`: `python -m data pull --pair BNB-USDT --days 30`.
 **Accept:** cold run pulls 30d of 1h klines in <60s; second run hits cache in <2s; parquet survives container restart.
 **Deps:** T-010

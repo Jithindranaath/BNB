@@ -48,6 +48,22 @@ line-length = 100
 target-version = "py311"
 
 [tool.setuptools]
-# Not a distributable package; import roots are wired via pytest pythonpath
-# and PYTHONPATH for the CLI. Nothing to build.
-py-modules = []
+# Two source roots: packages/ (shared libs) and services/ (apps). The editable
+# install maps both so `python -m data` and `orchestrator.main:app` work without
+# PYTHONPATH gymnastics.
+package-dir = { "data" = "packages/data", "agents" = "services/agents", "orchestrator" = "services/orchestrator" }
+packages = [
+    "data",
+    "data.sources",
+    "data.reference",
+    "agents",
+    "agents.pcs_rebalancer",
+    "agents.bnb_grid",
+    "agents.pcs_yield",
+    "agents.venus_guard",
+    "agents.bsc_sentry",
+    "orchestrator",
+]
+
+[project.scripts]
+data = "data.cli:main"
