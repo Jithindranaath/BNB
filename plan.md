@@ -116,17 +116,17 @@ Implement `architecture.md` §7 exactly. Alembic migration. `agent_stats` as a m
 
 ## Phase 3 — Tier 0 agents (ship first: they are the judge's entry point)
 
-### T-030 · Anvil fork simulation harness · TODO — **highest value per hour in the build**
+### T-030 · Anvil fork simulation harness · WIP — **highest value per hour in the build**
 `services/agents/bsc_sentry/fork.py`: fork BSC at head, fund a fresh EOA from an impersonated whale, buy token via router, attempt sell, compare against QuoterV2. Return traces and amounts.
 **Accept:** correctly identifies a known honeypot as unsellable and a known-good token as sellable. Both cases in the test suite with the addresses cited.
 **Deps:** T-010, T-001
 
-### T-031 · `bsc-sentry` full check suite · TODO
+### T-031 · `bsc-sentry` full check suite · WIP
 All checks in `spec.md` §3.1, scoring per §3.3. Every score line carries its evidence — never emit a score without it.
 **Accept:** produces a full report for a known-good and a known-bad token; hard-fail list forces CRITICAL.
 **Deps:** T-030
 
-### T-032 · Security test set + measured claim · TODO
+### T-032 · Security test set + measured claim · WIP
 Build `fixtures/security_testset.json` (~150 bad from public rug post-mortems with source URLs, ~150 good). Run sentry over it. Record precision, recall, FPR, n.
 **Do not train a classifier on this set — it is a test set (spec §3.4).**
 **Accept:** measured numbers written to `fixtures/security_results.json` and surfaced on the agent card.

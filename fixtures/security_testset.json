@@ -1,0 +1,39 @@
+{
+  "_note": "Labeled set for the bsc-sentry measured claim (spec.md §3.4). NOT a training set. `good` addresses are established BSC tokens from the PancakeSwap extended token list. `synthetic_bad` are malicious contracts deployed onto the fork at run time (a real, currently-liquid rug is hard to pin to a fixed address; the synthetic contracts prove the true-positive path deterministically). To scale toward the ~150+150 the spec asks for, add real rug post-mortem addresses to `bad` with a source_url each and re-run scripts/run_security_testset.py.",
+  "good_source_url": "https://github.com/pancakeswap/token-list/blob/main/lists/pancakeswap-extended.json",
+  "good": [
+    {"symbol": "ETH",  "address": "0x2170Ed0880ac9A755fd29B2688956BD959F933F8"},
+    {"symbol": "BTCB", "address": "0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c"},
+    {"symbol": "USDC", "address": "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d"},
+    {"symbol": "USDT", "address": "0x55d398326f99059fF775485246999027B3197955"},
+    {"symbol": "BUSD", "address": "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"},
+    {"symbol": "DAI",  "address": "0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3"},
+    {"symbol": "TUSD", "address": "0x40af3827F39D0EAcBF4A168f8D4ee67c121D11c9"},
+    {"symbol": "FDUSD","address": "0xc5f0f7b66764F6ec8C8Dff7BA683102295E16409"},
+    {"symbol": "XRP",  "address": "0x1D2F0da169ceB9fC7B3144628dB156f3F6c60dBE"},
+    {"symbol": "ADA",  "address": "0x3EE2200Efb3400fAbB9AacF31297cBdD1d435D47"},
+    {"symbol": "DOGE", "address": "0xbA2aE424d960c26247Dd6c32edC70B295c744C43"},
+    {"symbol": "LINK", "address": "0xF8A0BF9cF54Bb92F17374d9e9A321E6a111a51bD"},
+    {"symbol": "DOT",  "address": "0x7083609fCE4d1d8Dc0C979AAb8c869Ea2C873402"},
+    {"symbol": "LTC",  "address": "0x4338665CBB7B2485A8855A139b75D5e34AB0DB94"},
+    {"symbol": "UNI",  "address": "0xBf5140A22578168FD562DCcF235E5D43A02ce9B1"},
+    {"symbol": "TWT",  "address": "0x4B0F1812e5Df2A09796481Ff14017e6005508003"},
+    {"symbol": "XVS",  "address": "0xcF6BB5389c92Bdda8a3747Ddb454cB7a64626C63"},
+    {"symbol": "BSW",  "address": "0x965F527D9159dCe6288a2219DB51fc6Eef120dD1"},
+    {"symbol": "ALPACA","address": "0x8F0528cE5eF7B51152A59745bEfDD91D97091d2F"},
+    {"symbol": "TRX",  "address": "0x85EAC5Ac2F758618dFa09bDbe0cf174e7d574D5B"},
+    {"symbol": "BCH",  "address": "0x8fF795a6F4D97E7887C79beA79aba5cc76444aDf"},
+    {"symbol": "EOS",  "address": "0x56b6fB708fC5732DEC1Afc8D8556423A2EDcCbD6"},
+    {"symbol": "ATOM", "address": "0x0Eb3a705fc54725037CC9e008bDede697f62F335"},
+    {"symbol": "SOL",  "address": "0x570A5D26f7765Ecb712C0924E4De545B89fD43dF"},
+    {"symbol": "INJ",  "address": "0xa2B726B1145A4773F68593CF171187d8EBe4d495"},
+    {"symbol": "CAKE", "address": "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82"}
+  ],
+  "bad": [],
+  "synthetic_bad": [
+    {"contract": "HoneypotToken", "label": "honeypot — sells revert",
+     "expect": "CRITICAL", "expect_hard_fail": "honeypot"},
+    {"contract": "HighTaxToken", "label": "40% burn-on-sell tax",
+     "expect": "CRITICAL", "expect_hard_fail": "transfer_tax"}
+  ]
+}

@@ -1,0 +1,327 @@
+{
+  "generated_at": "2026-09-07T13:15:46.450165+00:00",
+  "n": 28,
+  "n_good": 26,
+  "n_bad": 2,
+  "confusion": {
+    "tp": 2,
+    "fn": 0,
+    "fp": 0,
+    "tn": 26,
+    "errors": 0
+  },
+  "precision": 1.0,
+  "recall": 1.0,
+  "false_positive_rate": 0.0,
+  "method": "Anvil BSC-mainnet fork buy/sell simulation + on-chain checks + BscScan source scan, scored by agents.bsc_sentry.scoring. 'bad' are synthetic malicious contracts deployed with real PancakeSwap v2 liquidity; add real rug post-mortem addresses to security_testset.json['bad'] to grow n.",
+  "rows": [
+    {
+      "label": "good",
+      "ref": "ETH",
+      "address": "0x2170Ed0880ac9A755fd29B2688956BD959F933F8",
+      "verdict": "WARN",
+      "hard_fails": [],
+      "warnings": [
+        "mint_by_eoa_verified"
+      ],
+      "score": 43,
+      "error": null
+    },
+    {
+      "label": "good",
+      "ref": "BTCB",
+      "address": "0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c",
+      "verdict": "WARN",
+      "hard_fails": [],
+      "warnings": [
+        "mint_by_eoa_verified"
+      ],
+      "score": 43,
+      "error": null
+    },
+    {
+      "label": "good",
+      "ref": "USDC",
+      "address": "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
+      "verdict": "OK",
+      "hard_fails": [],
+      "warnings": [],
+      "score": 80,
+      "error": null
+    },
+    {
+      "label": "good",
+      "ref": "USDT",
+      "address": "0x55d398326f99059fF775485246999027B3197955",
+      "verdict": "WARN",
+      "hard_fails": [],
+      "warnings": [
+        "mint_by_eoa_verified"
+      ],
+      "score": 43,
+      "error": null
+    },
+    {
+      "label": "good",
+      "ref": "BUSD",
+      "address": "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56",
+      "verdict": "WARN",
+      "hard_fails": [],
+      "warnings": [
+        "mint_by_eoa_verified"
+      ],
+      "score": 43,
+      "error": null
+    },
+    {
+      "label": "good",
+      "ref": "DAI",
+      "address": "0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3",
+      "verdict": "WARN",
+      "hard_fails": [],
+      "warnings": [
+        "mint_by_eoa_verified"
+      ],
+      "score": 43,
+      "error": null
+    },
+    {
+      "label": "good",
+      "ref": "TUSD",
+      "address": "0x40af3827F39D0EAcBF4A168f8D4ee67c121D11c9",
+      "verdict": "OK",
+      "hard_fails": [],
+      "warnings": [],
+      "score": 88,
+      "error": null
+    },
+    {
+      "label": "good",
+      "ref": "FDUSD",
+      "address": "0xc5f0f7b66764F6ec8C8Dff7BA683102295E16409",
+      "verdict": "OK",
+      "hard_fails": [],
+      "warnings": [],
+      "score": 85,
+      "error": null
+    },
+    {
+      "label": "good",
+      "ref": "XRP",
+      "address": "0x1D2F0da169ceB9fC7B3144628dB156f3F6c60dBE",
+      "verdict": "WARN",
+      "hard_fails": [],
+      "warnings": [
+        "mint_by_eoa_verified"
+      ],
+      "score": 43,
+      "error": null
+    },
+    {
+      "label": "good",
+      "ref": "ADA",
+      "address": "0x3EE2200Efb3400fAbB9AacF31297cBdD1d435D47",
+      "verdict": "WARN",
+      "hard_fails": [],
+      "warnings": [
+        "mint_by_eoa_verified"
+      ],
+      "score": 43,
+      "error": null
+    },
+    {
+      "label": "good",
+      "ref": "DOGE",
+      "address": "0xbA2aE424d960c26247Dd6c32edC70B295c744C43",
+      "verdict": "OK",
+      "hard_fails": [],
+      "warnings": [],
+      "score": 80,
+      "error": null
+    },
+    {
+      "label": "good",
+      "ref": "LINK",
+      "address": "0xF8A0BF9cF54Bb92F17374d9e9A321E6a111a51bD",
+      "verdict": "WARN",
+      "hard_fails": [],
+      "warnings": [
+        "mint_by_eoa_verified"
+      ],
+      "score": 43,
+      "error": null
+    },
+    {
+      "label": "good",
+      "ref": "DOT",
+      "address": "0x7083609fCE4d1d8Dc0C979AAb8c869Ea2C873402",
+      "verdict": "WARN",
+      "hard_fails": [],
+      "warnings": [
+        "mint_by_eoa_verified"
+      ],
+      "score": 43,
+      "error": null
+    },
+    {
+      "label": "good",
+      "ref": "LTC",
+      "address": "0x4338665CBB7B2485A8855A139b75D5e34AB0DB94",
+      "verdict": "WARN",
+      "hard_fails": [],
+      "warnings": [
+        "mint_by_eoa_verified"
+      ],
+      "score": 43,
+      "error": null
+    },
+    {
+      "label": "good",
+      "ref": "UNI",
+      "address": "0xBf5140A22578168FD562DCcF235E5D43A02ce9B1",
+      "verdict": "OK",
+      "hard_fails": [],
+      "warnings": [],
+      "score": 80,
+      "error": null
+    },
+    {
+      "label": "good",
+      "ref": "TWT",
+      "address": "0x4B0F1812e5Df2A09796481Ff14017e6005508003",
+      "verdict": "OK",
+      "hard_fails": [],
+      "warnings": [],
+      "score": 84,
+      "error": null
+    },
+    {
+      "label": "good",
+      "ref": "XVS",
+      "address": "0xcF6BB5389c92Bdda8a3747Ddb454cB7a64626C63",
+      "verdict": "OK",
+      "hard_fails": [],
+      "warnings": [],
+      "score": 88,
+      "error": null
+    },
+    {
+      "label": "good",
+      "ref": "BSW",
+      "address": "0x965F527D9159dCe6288a2219DB51fc6Eef120dD1",
+      "verdict": "OK",
+      "hard_fails": [],
+      "warnings": [],
+      "score": 77,
+      "error": null
+    },
+    {
+      "label": "good",
+      "ref": "ALPACA",
+      "address": "0x8F0528cE5eF7B51152A59745bEfDD91D97091d2F",
+      "verdict": "OK",
+      "hard_fails": [],
+      "warnings": [],
+      "score": 77,
+      "error": null
+    },
+    {
+      "label": "good",
+      "ref": "TRX",
+      "address": "0x85EAC5Ac2F758618dFa09bDbe0cf174e7d574D5B",
+      "verdict": "OK",
+      "hard_fails": [],
+      "warnings": [],
+      "score": 80,
+      "error": null
+    },
+    {
+      "label": "good",
+      "ref": "BCH",
+      "address": "0x8fF795a6F4D97E7887C79beA79aba5cc76444aDf",
+      "verdict": "WARN",
+      "hard_fails": [],
+      "warnings": [
+        "mint_by_eoa_verified"
+      ],
+      "score": 43,
+      "error": null
+    },
+    {
+      "label": "good",
+      "ref": "EOS",
+      "address": "0x56b6fB708fC5732DEC1Afc8D8556423A2EDcCbD6",
+      "verdict": "WARN",
+      "hard_fails": [],
+      "warnings": [
+        "mint_by_eoa_verified"
+      ],
+      "score": 43,
+      "error": null
+    },
+    {
+      "label": "good",
+      "ref": "ATOM",
+      "address": "0x0Eb3a705fc54725037CC9e008bDede697f62F335",
+      "verdict": "WARN",
+      "hard_fails": [],
+      "warnings": [
+        "mint_by_eoa_verified"
+      ],
+      "score": 43,
+      "error": null
+    },
+    {
+      "label": "good",
+      "ref": "SOL",
+      "address": "0x570A5D26f7765Ecb712C0924E4De545B89fD43dF",
+      "verdict": "OK",
+      "hard_fails": [],
+      "warnings": [],
+      "score": 80,
+      "error": null
+    },
+    {
+      "label": "good",
+      "ref": "INJ",
+      "address": "0xa2B726B1145A4773F68593CF171187d8EBe4d495",
+      "verdict": "OK",
+      "hard_fails": [],
+      "warnings": [],
+      "score": 80,
+      "error": null
+    },
+    {
+      "label": "good",
+      "ref": "CAKE",
+      "address": "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82",
+      "verdict": "OK",
+      "hard_fails": [],
+      "warnings": [],
+      "score": 82,
+      "error": null
+    },
+    {
+      "label": "bad",
+      "ref": "HoneypotToken",
+      "address": "0x256c2248aF2B18E7dF41cbdFAa4319b1FE16D3B1",
+      "verdict": "CRITICAL",
+      "hard_fails": [
+        "honeypot"
+      ],
+      "score": 10,
+      "expected_hard_fail": "honeypot"
+    },
+    {
+      "label": "bad",
+      "ref": "HighTaxToken",
+      "address": "0xD23AAEfC9Ea8D0b4bD870a36FD3532868f66aE16",
+      "verdict": "CRITICAL",
+      "hard_fails": [
+        "transfer_tax"
+      ],
+      "score": 10,
+      "expected_hard_fail": "transfer_tax"
+    }
+  ]
+}

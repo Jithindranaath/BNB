@@ -308,6 +308,33 @@ NOTE:   subgraph.py needs a working Graph query key (3 rejected — likely Graph
   logfile + Monitor for long commands, not `... | tail`.
 - Suite 35 pass / 1 skip, ruff clean. **Gate 2 in progress** (T-022–024 next).
 
+### 2026-09-07 · T-030 + T-031 + T-032 · DONE  (Phase 3 partial; T-033 held)
+- **T-030** `services/agents/bsc_sentry/fork.py`: `anvil_fork()` cm (POA middleware,
+  `FORK_RPC_URL`, free port) + `simulate_trade()` — funds an Anvil account with
+  WBNB (no hard-coded whale, R1), buys via PancakeSwap **v2** router
+  `...SupportingFeeOnTransferTokens`, then sells. sell reverts ⇒ honeypot; sell
+  << `getAmountsOut` ⇒ transfer tax. Tests: CAKE sellable; a deployed
+  `contracts/test/HoneypotToken.sol` (real v2 liquidity on the fork) unsellable.
+- **T-031** `checks.py` (9 checks, each returns a `Check` with evidence — honeypot
+  + tax from the sim; ownership; EIP-1967 proxy slots; dangerous-fn ABI scan via
+  BscScan source; LP burned %; contract age by `eth_getCode` bisection, "unknown"
+  when the RPC has no archive; source verified; holder concentration = unavailable),
+  `scoring.py` (pure, weighted 0–100). Hard-fails: honeypot, sell tax >25%
+  (the un-fakeable fork-sim ones), and EOA-held `mint` **on an unverified contract**.
+  **Deviation from spec §3.3:** flat "unrenounced mint" flagged every Binance-Peg
+  token CRITICAL (they have a real centralised mint) — now a heavy WARN
+  (`mint_by_eoa_verified`, score ×0.55) when the source is verified.
+  `agent.py` `BscSentryAgent`: observe() forks + checks (I/O); decide() = pure
+  score_report; report() metric = `wall_seconds` vs the manual_analyst baseline.
+- **T-032** `fixtures/security_testset.json` (26 established BSC tokens from the
+  PancakeSwap extended list + 2 synthetic bad: HoneypotToken, HighTaxToken).
+  `scripts/run_security_testset.py` runs sentry over it →
+  `fixtures/security_results.json` with precision/recall/FPR/**n**. n is a
+  demonstrator (~28, not the ~300 the spec wants) — the harness scales; add real
+  rug addresses to `["bad"]` and re-run.
+- **T-033 held** for a working Graph query key.
+- Suite non-live 41 pass; live sentry/fork tests 11 pass.
+
 ### 2026-09-07 · T-022 + T-023 + T-024 · DONE  (Gate 2 green)
 - **agents/base.py:** `canonical_hash(obj)` — the one hashing rule (snapshot /
   task / merkle leaf all use it). `ExecContext` now a **frozen** dataclass with
