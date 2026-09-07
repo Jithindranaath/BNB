@@ -312,10 +312,19 @@ NOTE:   T-033 pcs-yield blocked on a working Graph query key (3 rejected).
 - The two separate paper-loop processes (grid + rebalancer) were OOM-killed
   ~1h in (each ~200 MB: pandas + web3 + pydantic, on top of Docker's ~600 MB).
   Deployment state (`var/*.json`) survived: grid at cycle 15, rebalancer at 4.
-- `scripts/run_paper_loops.py` now cycles BOTH agents in a single interpreter,
-  resuming from `var/*.json` (never resets). Relaunched at a 10-min interval;
-  grid resumed at cycle 17, rebalancer at cycle 6.
-- If it dies again: `python scripts/run_paper_loops.py --interval 600`.
+- `scripts/run_paper_loops.py` cycles BOTH agents in a single interpreter,
+  resuming from `var/*.json` (never resets).
+- **BLOCKER (environmental):** the combined runner was ALSO OOM-killed within one
+  iteration. This box is too memory-tight for a harness-managed background Python
+  process to stay resident alongside Docker. `T-040`'s "≥6h continuous" criterion
+  cannot be met from inside this session — it needs a real terminal
+  (`python scripts/run_paper_loops.py --interval 600`, not subject to the OOM
+  reaper) or the Phase 7 deploy target. The runner + agents are done and proven
+  (17 grid cycles / 6 rebalancer cycles accrued across restarts, real receipts);
+  only the uptime is blocked. State in `var/*.json` resumes cleanly.
+- Receipts in DB: grid 9, rebalancer 4 (a full `pytest -m live` earlier ran
+  `test_db_migration` which rebuilt the schema — the cycle counters in
+  `var/*.json` are the real progress).
 
 ### 2026-09-07 · T-044 venus-guard · DONE  (the dramatic receipt)
 - `venus.account_health(account)` — real on-chain HF: per-market `balanceOf x
