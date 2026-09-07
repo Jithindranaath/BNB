@@ -1,25 +1,43 @@
-"""FastAPI app. Full route set is spec.md §8; implemented in T-060/T-061.
+"""proofstand orchestrator — FastAPI app assembly (spec.md §8).
 
-Run:  uvicorn orchestrator.main:app --reload --port 8080
-      (with PYTHONPATH including ./services)
+Run:  uvicorn orchestrator.main:app --reload --port 8080 --app-dir services
 """
 
 from __future__ import annotations
 
+import contextlib
+import logging
+
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="proofstand orchestrator", version="0.0.0")
+from .api import router
+
+log = logging.getLogger("orchestrator")
 
 
-@app.get("/healthz")
-async def healthz() -> dict:
-    """Per-dependency health. spec.md §8: 'must report each dependency
-    individually. During judging you need to know within seconds which leg is
-    down.' Wired to real checks in T-060 — until then each leg is 'unknown'."""
-    legs = ["db", "redis", "rpc", "hummingbot", "gateway"]
-    return {"status": "scaffold", "deps": {leg: "unknown" for leg in legs}}
+@contextlib.asynccontextmanager
+async def lifespan(app: FastAPI):
+    from . import queries
+
+    try:
+        synced = queries.sync_registry_to_db()
+        log.info("registry synced to db: %s", synced)
+    except Exception as e:  # noqa: BLE001
+        log.warning("registry sync skipped (%s)", e)
+    yield
+
+
+app = FastAPI(title="proofstand orchestrator", version="0.1.0", lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # local marketplace dev; tighten for the public deploy
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+app.include_router(router)
 
 
 @app.get("/")
 async def root() -> dict:
-    return {"service": "proofstand-orchestrator", "see": "spec.md §8 for the API"}
+    return {"service": "proofstand-orchestrator", "docs": "/docs", "api": "spec.md §8"}
