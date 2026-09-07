@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+import numpy as np
 import pandas as pd
 from data.calibrate import il_estimate
 
@@ -56,7 +57,10 @@ def simulate_rebalancer(
     risk, fee_tier, spacing, horizon = rng.risk, rng.fee_tier, rng.spacing, rng.horizon_days
 
     close = klines["close"].to_numpy(dtype=float)
-    ts = (pd.to_datetime(klines["open_time"]).astype("int64") // 1_000_000).to_numpy()
+    # epoch ms, robust to tz-aware/naive and to the datetime unit (ns vs ms)
+    ts = np.array(
+        [pd.Timestamp(t).timestamp() * 1000 for t in klines["open_time"]], dtype="int64"
+    )
     n = len(close)
 
     accrued_fees = 0.0
