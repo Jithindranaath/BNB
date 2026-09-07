@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { api, round } from "@/lib/api";
+import { MerkleVerifier } from "@/components/MerkleVerifier";
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +60,9 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
             </ul>
           </details>
         ) : null}
+        <div className="mt-3 border-t border-neutral-100 pt-3">
+          <MerkleVerifier leaf={r.merkle_leaf} proof={r.merkle_proof} root={r.anchor_root} />
+        </div>
         <p className="mt-3 text-xs text-neutral-500">{r.verified_hint}</p>
       </section>
     </div>

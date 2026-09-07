@@ -204,10 +204,12 @@ arq queue, `POST /hires`, `GET /hires/{id}/stream`, cancel.
 **Accept:** a hire runs end to end and streams phase updates to a browser.
 **Deps:** T-060
 
-### T-062 · ReceiptAnchor.sol + batching · TODO
+### T-062 · ReceiptAnchor.sol + batching · WIP (anvil-proven; mainnet anchor pending funds)
 Foundry contract per `architecture.md` §12. Orchestrator batches leaves every 10 min, submits the root. Client-side merkle proof verifier on `/receipt/[id]`.
 **Accept:** at least one batch anchored on BSC mainnet; a proof verifies in the browser against the on-chain root.
 **Deps:** T-060
+**Done:** `anchor.py` (create_batch/submit_batch, sorted-pair keccak `merkle_root`/`merkle_proof` incl. odd-tail self-sibling, `verify_proof`, `proof_for`), `ANCHOR_ABI`; `scripts/anchor_receipts.py` proves deploy → `anchor()` → `BatchAnchored` → browser-shaped proof end to end on a local anvil (13-leaf batch, event root == batch root, proof verifies). `tests/test_anchor.py` 10 pass. Web `MerkleVerifier.tsx` (@noble/hashes keccak_256 re-fold) on `/receipt/[id]`, `next build` green.
+**Blocked:** BSC-mainnet anchor needs `ANCHOR_PRIVATE_KEY` + BNB for gas (same funds gate as T-041/T-043).
 
 ### T-063 · Agent Advantage Report · TODO
 `/report` generated from receipts, plus PDF export. ≥3 both-ways tasks with real attached outputs, ≥1 trading/security. Any backtest labelled `BACKTEST` with its replay method stated — never silently mixed with live runs.

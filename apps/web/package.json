@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@noble/hashes": "^1.6.1",
     "next": "15.5.25",
     "react": "19.0.0",
     "react-dom": "19.0.0"
