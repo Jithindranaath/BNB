@@ -158,11 +158,12 @@ Stop and surface it (don't work around it silently) when:
 
 ```
 PHASE:  2 — Harness and receipts
-TASK:   T-020 · Agent base + manifest loader   (also T-021 DB schema — indep.)
+TASK:   T-022 · Run harness + receipt writer
 STATE:  TODO (next)
-NEXT:   T-022 run harness + receipt writer
+NEXT:   T-023 baseline runners, T-024 tier enforcement
 NOTE:   subgraph.py needs a working Graph query key (3 rejected — likely Graph
         billing not activated). gas: v3-NPM/venus units still to measure (T-042/44).
+        DB/redis: use 127.0.0.1, never localhost (Windows ::1 hangs).
 ```
 
 ---
@@ -281,6 +282,30 @@ NOTE:   subgraph.py needs a working Graph query key (3 rejected — likely Graph
   (BSC extraData) + `settings.fork_rpc_url`.
 - Suite 27 pass / 1 skip, ruff clean. **Gate 1→2: green.**
 - Next: **T-020** (agent base + manifest loader), **T-021** (DB schema) — independent.
+
+### 2026-09-07 · T-020 + T-021 · DONE
+- **T-020:** `agents/manifest.py` — Pydantic `Manifest` (spec §1) with
+  `InputSpec/AdvantageMetric/Pricing/KillSwitch`, `extra="forbid"`, coherence
+  rules (enum⇒values, min/max⇒number, bps⇔perf_fee, Tier 2⇒kill_switch),
+  `validate_inputs()`→per-field errors, `apply_defaults()`.
+  `orchestrator/registry.py` — `load_registry()`; invalid manifest ⇒
+  `available=False`, never partial; `_`-dirs hidden. `agents/_echo/` EchoAgent
+  (no-op, pure `decide`). All 5 real manifests validate. tests/test_registry.py (7).
+- **T-021:** `migrations/versions/0001_initial_schema.py` = architecture.md §7,
+  hand-written. `runs` is a Timescale hypertable (`by_range('started_at')`),
+  PK `(id, started_at)`; `receipts` has no FK to `runs` (hypertable can't be an
+  FK target) — harness writes both in one tx. `agent_stats` table +
+  `refresh_agent_stats()` for the 60s job (spec §7). `orchestrator/db.py`
+  SQLAlchemy 2.0 models, `orchestrator/config.py`. `alembic.ini` + `migrations/`.
+  tests/test_db_migration.py: downgrade→base→upgrade→head, asserts tables +
+  hypertable + composite PK + CHECK constraints; 1.17s.
+- **GOTCHA (cost ~20 min):** first PG connections "hung" for minutes.
+  Cause: `localhost` on Windows resolves to `::1` first and psycopg's default
+  `connect_timeout` is infinite. Fix: `127.0.0.1` everywhere (.env, .env.example,
+  config.py, data/settings.py) + `connect_timeout=10` on the engine + alembic.
+  Also: `| tail` in a Bash pipe hides all output until the process exits — use a
+  logfile + Monitor for long commands, not `... | tail`.
+- Suite 35 pass / 1 skip, ruff clean. **Gate 2 in progress** (T-022–024 next).
 
 ---
 

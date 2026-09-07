@@ -16,8 +16,8 @@ class Settings(BaseSettings):
         env_file=_REPO_ROOT / ".env", env_file_encoding="utf-8", extra="ignore"
     )
 
-    # infra
-    redis_url: str = "redis://localhost:6379/0"
+    # infra — 127.0.0.1 not localhost (Windows resolves localhost to ::1 first)
+    redis_url: str = "redis://127.0.0.1:6379/0"
 
     # chain
     bsc_rpc_url: str = "https://bsc-rpc.publicnode.com"
