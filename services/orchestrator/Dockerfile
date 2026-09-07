@@ -5,13 +5,19 @@
 # migration degrades to a plain table when the extension is absent, so any free
 # managed Postgres works). Redis is optional; without REDIS_URL the hot cache is
 # simply bypassed. No API keys are required for a first deploy (BscScan / The
-# Graph keys only unlock the sentry contract-age check and pcs-yield).
+# Graph keys only unlock the sentry contract-age check and pcs-yield's v3 feed).
+#
+# `anvil` (Foundry) is bundled: bsc-sentry forks BSC on every hire and pcs-yield's
+# security gate does too. Without it those hires fail / the gate degrades.
 
 FROM python:3.11.9-slim
 
 ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# anvil, pinned to the same Foundry build recorded in architecture.md §Versions
+COPY --from=ghcr.io/foundry-rs/foundry:v1.8.1 /usr/local/bin/anvil /usr/local/bin/anvil
 
 WORKDIR /app
 

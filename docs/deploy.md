@@ -12,6 +12,10 @@ itself when Redis is absent. The trading agents' paper loop
 (`scripts/run_paper_loops.py`) is **not** part of this deploy; it runs from a
 real terminal (see `WORKFLOW.md` §5).
 
+`anvil` (Foundry 1.8.1) is baked into the orchestrator image — `bsc-sentry`
+forks BSC mainnet on every hire and `pcs-yield`'s security gate does too. The
+image is ~1 GB because of it; well within Render's limit.
+
 Acceptance: the site is reachable from a phone on cellular data, cold, with no
 VPN, and `/healthz` reports `db` and `rpc` ok.
 
