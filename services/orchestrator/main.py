@@ -12,6 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .api import router
+from .config import config
 
 log = logging.getLogger("orchestrator")
 
@@ -31,7 +32,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="proofstand orchestrator", version="0.1.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # local marketplace dev; tighten for the public deploy
+    # "*" for local dev; set CORS_ALLOW_ORIGINS to the deployed web origin(s).
+    allow_origins=config().cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )

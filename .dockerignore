@@ -1,0 +1,39 @@
+# Keep the orchestrator image small + secret-free (T-070).
+.git
+.venv
+venv
+**/__pycache__
+**/*.py[cod]
+.pytest_cache
+.ruff_cache
+.mypy_cache
+*.egg-info
+
+# secrets — never in an image
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# front end (deployed separately to Vercel)
+apps/web/node_modules
+apps/web/.next
+apps/web/out
+scripts/node_modules
+
+# local data cache + runtime state
+packages/data/.cache
+*.parquet
+var/
+
+# foundry build output
+contracts/out
+contracts/cache
+contracts/broadcast
+
+# docs / editor
+.idea
+.vscode
+.DS_Store
+Thumbs.db

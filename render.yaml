@@ -1,0 +1,53 @@
+# Render Blueprint for the proofstand orchestrator (T-070) — the free path.
+#
+#   1. push this repo to GitHub
+#   2. Render dashboard -> New -> Blueprint -> pick the repo
+#   3. fill the `sync: false` vars (see below), Apply
+#
+# What you get: one free Docker web service + one free Postgres, DATABASE_URL
+# auto-wired. Redis is intentionally omitted — the hot cache self-bypasses when
+# it is absent (packages/data/cache.py). No API keys are required to boot;
+# BSCSCAN_API_KEY unlocks the sentry contract-age check, GRAPH_API_KEY unlocks
+# pcs-yield.
+#
+# Free-tier caveats (documented in docs/deploy.md):
+#   * the web service sleeps after ~15 min idle; first hit then takes ~50 s
+#   * the free Postgres is deleted ~30 days after creation — swap DATABASE_URL
+#     to a Neon free database (persistent) for anything longer-lived
+#   * no persistent disk: the parquet kline cache is rebuilt from Binance on
+#     each cold start (read_klines handles this)
+
+services:
+  - type: web
+    name: proofstand-orchestrator
+    runtime: docker
+    plan: free
+    dockerfilePath: ./services/orchestrator/Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: proofstand-db
+          property: connectionString
+      - key: CORS_ALLOW_ORIGINS
+        sync: false            # set to your Vercel origin, e.g. https://proofstand.vercel.app
+      - key: BSC_RPC_URL
+        value: https://bsc-rpc.publicnode.com
+      - key: BSC_RPC_URL_FALLBACK
+        value: https://bsc-dataseed.bnbchain.org
+      - key: FORK_RPC_URL
+        value: https://bsc-dataseed1.bnbchain.org
+      - key: BSCSCAN_API_KEY
+        sync: false            # optional — blank is fine
+      - key: GRAPH_API_KEY
+        sync: false            # optional — blank keeps pcs-yield unavailable
+      - key: PYTHONUNBUFFERED
+        value: "1"
+
+databases:
+  - name: proofstand-db
+    plan: free
+    databaseName: proofstand
+    user: proofstand

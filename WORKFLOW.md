@@ -158,11 +158,14 @@ Stop and surface it (don't work around it silently) when:
 
 ```
 PHASE:  7 — Ship   (Phases 5 & 6 done; T-033 pcs-yield HELD for Graph key)
-TASK:   T-070 · deploy (web → Vercel, orchestrator + runtime → a host)
-STATE:  TODO (next)
-NEXT:   T-071 full acceptance pass, T-072 demo rehearsal
-NOTE:   Funds gate still open: T-041 (grid live), T-043 (rebalancer live),
-        T-062 mainnet anchor — all proven on anvil forks / local anvil.
+TASK:   T-070 · deploy — artifacts built + locally proven; hosted deploy needs the user
+STATE:  WIP (Dockerfile/entrypoint/render.yaml/vercel.json/docs/deploy.md done;
+        migration made Postgres-portable; image ran green against local PG)
+NEXT:   user pushes to GitHub + runs Render Blueprint + Vercel import (docs/deploy.md),
+        then T-071 full acceptance pass, T-072 demo rehearsal
+NOTE:   Free stack: orchestrator → Render free Docker web service + Render/Neon free
+        Postgres (Timescale optional now); web → Vercel; NO Redis (cache self-bypasses).
+        Funds gate still open: T-041, T-043, T-062 mainnet anchor (anvil-proven).
         T-033 pcs-yield blocked on a working Graph query key.
         Paper loop must run in a REAL terminal (OOM reaper kills bg processes):
           python scripts/run_paper_loops.py --interval 600
@@ -506,6 +509,41 @@ NOTE:   Funds gate still open: T-041 (grid live), T-043 (rebalancer live),
 - `test_api.py` advantage tests rewritten + a PDF test added. venus/anchor/
   harness/registry suites green, ruff clean, `next build` green.
 - Next: **Phase 7** — T-070 deploy, T-071 acceptance pass, T-072 demo rehearsal.
+
+---
+
+### 2026-09-07 · T-070 · deploy artifacts (Phase 7)
+- Chosen stack (user: "simplest and free"): orchestrator → **Render** free Docker
+  web service + free Postgres; web → **Vercel**; **no Redis** (the hot cache in
+  `packages/data/cache.py` bypasses itself when it is absent).
+- `services/orchestrator/Dockerfile` (build context = repo root; `pip install -e .`
+  so `reference/*.json` + `manifest.yaml` resolve via `Path(__file__)` the same as
+  local). `infra/deploy/entrypoint.sh`: `serve` → `alembic upgrade head` then
+  `uvicorn … --port $PORT` (hosts inject `$PORT`); `migrate` → migrations only.
+  `.dockerignore` keeps the image secret-free + small.
+- **Migration `0001` made Postgres-portable.** `CREATE EXTENSION timescaledb` and
+  `create_hypertable('runs', …)` are now wrapped in `DO $$ … IF EXISTS (SELECT 1
+  FROM pg_available_extensions …) $$`. Timescale is still used on the local docker
+  image; a plain managed Postgres gets `runs` as a non-partitioned table — the
+  composite PK `(id, started_at)` and every query are unchanged. Verified on a
+  stock `postgres:16-alpine`: schema applies, FK + checks intact, inserts work.
+- `config.py`: `postgres://` / `postgresql://` URLs are rewritten to
+  `postgresql+psycopg://` (Neon/Render form; `?sslmode=require` kept).
+  `CORS_ALLOW_ORIGINS` env → `main.py` CORS list (still `*` by default — the API
+  is read-only + unauthenticated). `tests/test_config.py`.
+- `render.yaml` Blueprint (web service + Postgres, `DATABASE_URL` auto-wired,
+  health check `/healthz`). `apps/web/vercel.json`. `infra/.env.example` +
+  `PORT` / `CORS_ALLOW_ORIGINS` / managed-DB note.
+- **`docs/deploy.md`** — the runbook. Render blueprint → verify `/healthz` →
+  Vercel import (root dir `apps/web`, `NEXT_PUBLIC_ORCHESTRATOR_URL` set **before**
+  the build) → wire CORS back → phone acceptance check → rollback. Free-tier
+  caveats spelled out (Render ~50 s cold wake; free PG deleted ~30 days → Neon
+  swap; ephemeral disk → kline cache rebuilds from Binance).
+- Built the image and ran it against the local Postgres: entrypoint migrated,
+  uvicorn served on the injected port, `/healthz` `status: ok` (db + rpc ok,
+  redis down tolerated), `/agents` real. Suite **111 pass / 1 skip**, ruff clean.
+- **Remaining is the user's:** push to GitHub, run the Render Blueprint, import to
+  Vercel, set the two URLs, do the phone check. Then T-071 / T-072.
 
 ---
 

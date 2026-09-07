@@ -224,9 +224,16 @@ Foundry contract per `architecture.md` §12. Orchestrator batches leaves every 1
 
 ## Phase 7 — Ship
 
-### T-070 · Deploy · TODO
+### T-070 · Deploy · WIP (deploy artifacts done + locally proven; hosted deploy needs the user's Render/Vercel/GitHub accounts)
 Front end to Vercel, orchestrator + runtime to a VPS or AWS. Public URL. `/healthz` green.
 **Accept:** the site is reachable from a phone on cellular data, cold, with no VPN.
+**Done (this box can be built without accounts):**
+- `services/orchestrator/Dockerfile` (context = repo root, editable install so reference JSON / manifests resolve) + `infra/deploy/entrypoint.sh` (`serve` = `alembic upgrade head` then uvicorn on `$PORT`; `migrate` = migrations only) + `.dockerignore`. Image builds; ran against the local Postgres → `/healthz` `status: ok` (db + rpc ok, redis down tolerated), `/agents` real.
+- Migration `0001` made Postgres-portable: `CREATE EXTENSION timescaledb` + `create_hypertable` guarded by `pg_available_extensions` / `pg_extension`. Proven on a stock `postgres:16-alpine` — schema applies, composite PK + FK + checks intact, inserts work. Any free managed Postgres (Neon / Render / Supabase) now works.
+- `config.py`: `postgres://` and `postgresql://` URLs rewritten to `postgresql+psycopg://` (`?sslmode=require` preserved); `CORS_ALLOW_ORIGINS` env → `main.py` CORS (defaults to `*`). `tests/test_config.py`.
+- `render.yaml` Blueprint (free Docker web service + free Postgres, `DATABASE_URL` auto-wired, health check `/healthz`). `apps/web/vercel.json`. `infra/.env.example` updated (`PORT`, `CORS_ALLOW_ORIGINS`, managed-DB note).
+- `docs/deploy.md` — full runbook: Render blueprint, Vercel import (root dir `apps/web`, `NEXT_PUBLIC_ORCHESTRATOR_URL` at build time), CORS wire-back, phone acceptance check, rollback, free-tier caveats (Render idle sleep ~50 s cold; free PG 30-day expiry → Neon swap; no persistent disk → kline cache rebuilds).
+**Remaining (needs the user):** push to GitHub, run the Render Blueprint, import to Vercel, set the two URLs, run the phone acceptance check. Redis / Hummingbot / Gateway not deployed by design.
 
 ### T-071 · Full acceptance pass · TODO
 Walk every item in `spec.md` §11 and record pass/fail honestly in `docs/acceptance.md`. A failure recorded is worth more than a pass faked.

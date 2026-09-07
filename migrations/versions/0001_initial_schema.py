@@ -5,7 +5,9 @@ Revises:
 Create Date: 2026-09-07
 
 Hand-written to match architecture.md §7 exactly. Two forced deviations, both
-because `runs` is a TimescaleDB hypertable:
+because `runs` is a TimescaleDB hypertable *when the extension is present*
+(T-070: the hypertable + CREATE EXTENSION are guarded so this also applies to a
+plain managed Postgres — the table shape and every query are unchanged):
   * runs PK is (id, started_at) — the partition column must be in every unique
     index; started_at is therefore NOT NULL DEFAULT now().
   * receipts has no DB-level FK to runs (a hypertable can't be an FK target
@@ -27,7 +29,20 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    op.execute("CREATE EXTENSION IF NOT EXISTS timescaledb")
+    # TimescaleDB is used when present (local docker image), but the schema must
+    # also apply to a plain managed Postgres (Neon / Render / Supabase free tier,
+    # T-070) where the extension is unavailable. The composite PK (id, started_at)
+    # and every query work identically on a non-partitioned `runs`.
+    op.execute(
+        """
+        DO $$
+        BEGIN
+            IF EXISTS (SELECT 1 FROM pg_available_extensions WHERE name = 'timescaledb') THEN
+                CREATE EXTENSION IF NOT EXISTS timescaledb;
+            END IF;
+        END $$
+        """
+    )
 
     op.execute(
         """
@@ -66,7 +81,16 @@ def upgrade() -> None:
         )
         """
     )
-    op.execute("SELECT create_hypertable('runs', by_range('started_at'))")
+    op.execute(
+        """
+        DO $$
+        BEGIN
+            IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'timescaledb') THEN
+                PERFORM create_hypertable('runs', by_range('started_at'));
+            END IF;
+        END $$
+        """
+    )
     op.execute("CREATE INDEX runs_agent_id_idx ON runs (agent_id, started_at DESC)")
     op.execute("CREATE INDEX runs_pair_run_id_idx ON runs (pair_run_id)")
 
