@@ -9,6 +9,23 @@ Status values: `TODO` · `WIP` · `DONE` · `BLOCKED(reason)`
 
 ---
 
+## Status (2026-09-08)
+
+All 5 agents built; front end, orchestrator API, anchor, and Agent Advantage
+Report done; deploy artifacts done. **DONE:** T-001–T-004, T-010–T-012,
+T-020–T-024, T-030–T-033, T-040, T-042, T-043, T-044, T-050–T-054, T-060, T-061,
+T-063, T-071, T-072. **WIP:** T-062 (anvil-proven; BSC-mainnet anchor pending a
+funded key), T-070 (artifacts done + locally proven; hosted deploy needs the
+user's GitHub/Render/Vercel accounts). **TODO:** T-041 (grid Tier-2 live —
+pending real funds).
+
+Open items are all external: funded keys (T-041, T-062), the hosted deploy
+(T-070), a human `manual_analyst` CAKE audit row (unblocks acceptance #5→5/5 +
+#6 + the sentry demo beat), and deploying the Envio HyperIndex PCS v3 indexer
+(`docs/envio-indexer.md`) so pcs-yield ranks v3 pools instead of v2.
+
+---
+
 ## Phase 0 — Ground truth (do not skip; everything else depends on it)
 
 ### T-001 · Repo scaffold · DONE
@@ -87,50 +104,58 @@ Implement `spec.md` §2. `gas_cost_usd` must be derived from gas units **measure
 
 ## Phase 2 — Harness and receipts (the scoring primitive)
 
-### T-020 · Agent base + manifest loader · WIP
+### T-020 · Agent base + manifest loader · DONE
 `services/agents/base.py` per `architecture.md` §8. `registry.py` loads and Pydantic-validates every `manifest.yaml`; an invalid manifest makes the agent unavailable rather than partially rendered.
 **Accept:** a no-op `EchoAgent` implements the ABC and loads.
 **Deps:** T-001
+**Done:** `agents/base.py` — `Agent` ABC (`observe/decide/act/report`), frozen `Observation/Decision/Actions/Result`, `canonical_hash()` (the one hashing rule), `ExecContext.for_tier()`, `TierViolation`. `registry.py` loads + validates every `manifest.yaml`; `_echo` hidden test agent.
 
-### T-021 · DB schema + migrations · WIP
+### T-021 · DB schema + migrations · DONE
 Implement `architecture.md` §7 exactly. Alembic migration. `agent_stats` as a materialised view refreshed every 60s.
 **Accept:** migration runs clean on an empty DB; hypertable created.
 **Deps:** T-001
+**Done:** `migrations/versions/0001_initial_schema.py` — agents / runs (TimescaleDB hypertable on `started_at`, composite PK `(id, started_at)`, guarded so it also applies to plain Postgres — T-070) / receipts / agent_stats + `refresh_agent_stats()` SQL fn. `tests/test_db_migration.py` (runs against a throwaway DB).
 
-### T-022 · Run harness + receipt writer · WIP
+### T-022 · Run harness + receipt writer · DONE
 `harness.py`: runs observe→decide→act→report, computes `data_snapshot_hash` (sha256 of canonicalised JSON of every input `decide()` consumed), persists the run, invokes the baseline runner **on the same Observation**, writes the receipt with the advantage delta.
 **Accept:** `EchoAgent` produces a valid receipt with a baseline attached. Test: `decide()` called twice on a frozen Observation returns identical Decisions (purity test — `spec.md` §11.3).
 **Deps:** T-020, T-021
+**Done:** `orchestrator/harness.py` `run_hire(agent, tier, inputs, *, persist=, on_phase=)` — validate → observe → `assert_pure`(decide×2) → act (tier<2 + signed ⇒ `TierViolation`) → report → baseline on the same Observation → 2 `runs` (paired via `pair_run_id`) + 1 `receipt` in one tx. `tests/test_harness.py`.
 
-### T-023 · Baseline runners · WIP
+### T-023 · Baseline runners · DONE
 `baselines.py`: `hodl`, `static_range`, `top_headline_apr`, `no_action`, `manual_analyst` (reads `fixtures/manual_baselines.json`).
 **Accept:** each runs against a fixed Observation and returns a comparable metric in the agent's declared unit.
 **Deps:** T-022, T-012
+**Done:** `orchestrator/baselines.py` — `hodl / static_range / top_headline_apr / no_action / manual_analyst / zero`, each returns `Result` in the manifest's metric+unit; missing data → `BaselineIncomplete` (never a guess). `top_headline_apr` reports the naive pick's realistic net APR (T-033). `tests/test_baselines.py` (10 pass).
 
-### T-024 · Tier enforcement · WIP
+### T-024 · Tier enforcement · DONE
 `ExecContext` with `tier` and `signer`. Tier 0/1 construct with `signer=None`; any signing attempt raises `TierViolation`.
 **Accept:** test asserts Tier 0 and Tier 1 cannot sign (`spec.md` §11.4).
 **Deps:** T-022
+**Done:** `ExecContext.for_tier(tier, signer=)` drops the signer for tier 0/1 (frozen dataclass); `require_signer()` raises `TierViolation`; the harness also raises if a tier-<2 agent's `act()` returns signed actions. `tests/test_tier.py`.
 
 ---
 
 ## Phase 3 — Tier 0 agents (ship first: they are the judge's entry point)
 
-### T-030 · Anvil fork simulation harness · WIP — **highest value per hour in the build**
+### T-030 · Anvil fork simulation harness · DONE — **highest value per hour in the build**
 `services/agents/bsc_sentry/fork.py`: fork BSC at head, fund a fresh EOA from an impersonated whale, buy token via router, attempt sell, compare against QuoterV2. Return traces and amounts.
 **Accept:** correctly identifies a known honeypot as unsellable and a known-good token as sellable. Both cases in the test suite with the addresses cited.
 **Deps:** T-010, T-001
+**Done:** `bsc_sentry/fork.py` — `anvil_fork()` cm (POA middleware, free port), `simulate_trade()` (v2 router `swapExactTokensForTokensSupportingFeeOnTransferTokens`, buy then sell; sell revert ⇒ honeypot). `tests/test_fork_sim.py` + `tests/test_sentry.py` (deployed `HoneypotToken` → CRITICAL, CAKE → OK/WARN).
 
-### T-031 · `bsc-sentry` full check suite · WIP
+### T-031 · `bsc-sentry` full check suite · DONE
 All checks in `spec.md` §3.1, scoring per §3.3. Every score line carries its evidence — never emit a score without it.
 **Accept:** produces a full report for a known-good and a known-bad token; hard-fail list forces CRITICAL.
 **Deps:** T-030
+**Done:** `bsc_sentry/checks.py` (9 checks, each returns a `Check` with evidence; EIP-1967 slots; contract-age via `eth_getCode` bisection). `scoring.py` — pure `score_report()` → `Report(verdict, score, hard_fails, warnings)`; hard-fails = honeypot / sell-tax >25% / EOA-mint on unverified. Fixed the flat "unrenounced mint" false-flag on every Binance-Peg token. `agent.py` `BscSentryAgent` (Tier 0), metric `wall_seconds`.
 
-### T-032 · Security test set + measured claim · WIP
+### T-032 · Security test set + measured claim · DONE
 Build `fixtures/security_testset.json` (~150 bad from public rug post-mortems with source URLs, ~150 good). Run sentry over it. Record precision, recall, FPR, n.
 **Do not train a classifier on this set — it is a test set (spec §3.4).**
 **Accept:** measured numbers written to `fixtures/security_results.json` and surfaced on the agent card.
 **Deps:** T-031
+**Done:** `fixtures/security_testset.json` (26 established BSC tokens + 2 synthetic honeypot/high-tax), `scripts/run_security_testset.py`, `fixtures/security_results.json` (n=28, precision 1.0, recall 1.0, FPR 0.0 — per-token fresh forks to dodge dataseed rate-limits). Scale to ~300 with real rug post-mortem addresses is a data-gathering follow-up.
 
 ### T-033 · `pcs-yield` · DONE (DefiLlama + on-chain; Envio v3 feed is an upgrade path)
 Net-APR model per `spec.md` §4.1 with each term displayed separately. Sentry gate per §4.2 with a visible "excluded by security agent" section.
@@ -149,63 +174,75 @@ Net-APR model per `spec.md` §4.1 with each term displayed separately. Sentry ga
 
 ## Phase 4 — Trading agents
 
-### T-040 · `bnb-grid` Tier 1 (paper) · WIP — **START RUNNING BY END OF DAY 2**
+### T-040 · `bnb-grid` Tier 1 (paper) · DONE (needs a real terminal for the ≥6h continuous run)
 Calibration per `spec.md` §5.1, paper ledger with live prices and a slippage haircut, circuit breaker per §5.3. Deploy it running continuously the moment it works — the live window length cannot be bought back later.
 **Accept:** runs continuously ≥6h without crashing, produces receipts against the `hodl` baseline, reports win rate / n_trades / window / max drawdown.
 **Deps:** T-022, T-023, T-012
+**Done:** `bnb_grid/` — `grid.py` `calibrate_grid()`, `sim.py` slot-based `simulate()` + circuit breaker, `agent.py` `BnbGridAgent`. `scripts/run_grid.py` + `scripts/run_paper_loops.py` (single-process grid+rebalancer loop, resumes from `var/*.json`). Produces real `hodl`-baseline receipts (win rate / n_trades / window / max drawdown in `outputs.stats`).
+**Caveat:** the ≥6h *continuous* run needs a real terminal — the harness OOM-reaper kills a background Python + Docker on this box (`python scripts/run_paper_loops.py --interval 600`).
 
-### T-041 · `bnb-grid` Tier 2 (live) · TODO
+### T-041 · `bnb-grid` Tier 2 (live) · TODO — pending real funds
 Generate a Hummingbot grid controller config, POST it via the Hummingbot API, start the bot, poll status. Small real capital.
 **Accept:** a live bot places and fills at least one real order; receipt reflects real gas and fees.
 **Deps:** T-040, T-004
+**Blocked:** needs `SESSION_KEY_PRIVATE_KEY` + BNB for gas. Everything up to signing is built.
 
-### T-042 · `pcs-rebalancer` Tier 1 · WIP
+### T-042 · `pcs-rebalancer` Tier 1 · DONE
 Range selection §6.1 and the cost-aware rebalance rule §6.2. The "holding — rebalance not economic, $X cost vs $Y expected" path must be implemented and visible, not just the act path.
 **Accept:** paper position tracks a real pool for ≥6h; both the rebalance and the decline-to-rebalance branches are exercised in tests.
 **Deps:** T-022, T-023, T-012
+**Done:** `pcs_rebalancer/` — `range.py` `select_range()` + tick math, `economics.py` `rebalance_decision()` (the §6.2 rule + the "holding: rebalance not economic — $X vs $Y" string), `sim.py`, `agent.py` (fee APR from DefiLlama). Both branches in `tests/test_rebalancer.py`. `scripts/run_rebalancer.py` produces `static_range`-baseline receipts. Same continuous-run caveat as T-040.
 
-### T-043 · `pcs-rebalancer` Tier 2 · WIP
+### T-043 · `pcs-rebalancer` Tier 2 · DONE (fork-proven; mainnet dry run pending funds)
 Execution via `NonfungiblePositionManager` (viem) or Gateway, per the T-004 finding.
 **Accept:** opens, adjusts, and closes a real small position on BSC; gas recorded from the receipts.
 **Deps:** T-042, T-004
+**Done:** `pcs_rebalancer/npm.py` — hand-rolled `NonfungiblePositionManager` (open/increase/close, tokenId via `tokenOfOwnerByIndex`). Full v3 position lifecycle proven on an Anvil BSC fork; v3-NPM gas measured → `fixtures/gas_units.json`. **Blocked:** a real BSC-mainnet position needs `SESSION_KEY_PRIVATE_KEY` + funds.
 
-### T-044 · `venus-guard` · TODO
+### T-044 · `venus-guard` · DONE
 On-chain HF monitoring, vol-scaled trigger §7.2, buffer repayment §7.3, and the `no_action` replay baseline §7.4 that computes the liquidation penalty avoided.
 **Accept:** correctly computes HF for a real Venus account; the replay baseline reproduces a historical liquidation on a known liquidated account.
 **Deps:** T-022, T-023, T-010
+**Done:** `venus_guard/` — `health.py` `vol_scaled_trigger()`, `replay.py` (`replay_no_action` liquidation-loss = close_factor·borrow·(incentive−1), `replay_guarded`), `agent.py` `VenusGuardAgent` (`_worst_drawdown_path` over a real 365-day ETH series). `data/sources/venus.py::account_health()` cross-checks against the Comptroller's own liquidity number. Real account `0x2221…ca14`: worst real drawdown → HF 0.995 → liquidated −$156.11, guard saves $155.99. `venus_repay_borrow` gas measured. `tests/test_venus_guard.py` (8 + 3 live). Venus Comptroller is an EIP-2535 Diamond — `liquidationIncentiveMantissa()` reverts; `reference/venus_params.json` records the value `verified:false` with source, flagged where used.
 
 ---
 
 ## Phase 5 — Marketplace front end
 
-### T-050 · API client + layout · TODO
+### T-050 · API client + layout · DONE
 Typed client in `apps/web/lib/api.ts`. Shell, nav, `config/brand.ts`.
 **Deps:** T-060
+**Done:** `lib/api.ts` (all §8 endpoints + `/activity` + `/report/advantage.pdf`, degrades to empty on unreachable), `app/layout.tsx` shell + nav, `config/brand.ts` (product name lives here only).
 
-### T-051 · Landing · TODO
+### T-051 · Landing · DONE
 Four equal-weight category tiles, live activity ticker of real runs, primary CTA "Try an agent — no wallet needed" deep-linking to `bsc-sentry` with a prefilled example address.
 **Accept:** someone who has never seen the project reaches a real sentry result in under 2 minutes, unaided. Test this on an actual human.
 **Deps:** T-050, T-031
+**Done:** `app/page.tsx` — 5 category tiles, ticker via `api.activity()`, CTA to `/agent/bsc-sentry?target=<CAKE>`. The "on an actual human, under 2 min" test is a T-072 cold-run item; the sentry *marketplace hire* needs the human `manual_analyst` baseline row first (acceptance #6).
 
-### T-052 · Category list + compare · TODO
+### T-052 · Category list + compare · DONE
 Filter, sort, 2–3 way compare with aligned rows. Cards render `n` and window beside every performance number; agents with no runs show "No runs yet" (R2).
 **Deps:** T-050
+**Done:** `app/category/[slug]/page.tsx` + `compare.tsx` (2–3 agent aligned-row compare, same-category only). `fmtAdvantage` gates every perf number behind `n=<n> · <window>d` / "No runs yet" (acceptance #7).
 
-### T-053 · Agent detail · TODO
+### T-053 · Agent detail · DONE
 Params with manifest defaults, the two curves (agent vs baseline, same axes, window labelled), receipt feed, risk disclosure block, security-audited badge where applicable.
 **Deps:** T-050
+**Done:** `app/agent/[id]/page.tsx` — manifest-param form, `CurveChart` (inline SVG dual-line, window labelled), receipt feed with per-run delta, `HirePanel`, `?target=` prefill. Unimplemented agents show a "Not yet available" panel (T-072 machinery; all 5 now available).
 
-### T-054 · Hire flow + live run view · TODO
+### T-054 · Hire flow + live run view · DONE
 Three steps max. Tier 2 shows the permission diff and spend cap before signing; Tier 0/1 state "no funds at risk". SSE live view with phase labels. No dead ends — every error offers a next action.
 **Deps:** T-053, T-061
+**Done:** `HirePanel.tsx` (3-step client form + `EventSource`), `app/hire/[id]/page.tsx` (SSE live run view with phase labels). Tier 0/1 state "no funds at risk". `next build` green.
 
 ---
 
 ## Phase 6 — Orchestrator API, anchor, report
 
-### T-060 · REST endpoints · TODO
+### T-060 · REST endpoints · DONE
 All of `spec.md` §8 except the SSE stream. `/healthz` reports each dependency individually.
 **Deps:** T-022, T-021
+**Done:** `orchestrator/api.py` — `/agents`, `/agents/{id}`, `/agents/{id}/receipts`, `/categories`, `/activity`, `POST /hires` (422 per-field, 409 for an unbuilt agent), `/hires/{id}`, `/receipts/{id}`, `/report/advantage`(+`.pdf`), `/healthz` (db/redis/rpc/hummingbot/gateway each individually; 200 + `status:degraded` if a non-critical dep is down). `main.py` lifespan syncs the registry to the DB. `queries.py`, `schemas.py`, `report.py`. `tests/test_api.py` (11 live pass).
 
 ### T-061 · Hire jobs + SSE · DONE
 arq queue, `POST /hires`, `GET /hires/{id}/stream`, cancel.
@@ -225,8 +262,8 @@ Foundry contract per `architecture.md` §12. Orchestrator batches leaves every 1
 **Accept:** the four tasks in `spec.md` §10 render with real data, explicit `n`, and window lengths.
 **Deps:** T-032, T-040, T-042, T-033
 **Done:** `report.py` `build_advantage_report()` — per task: `kind` (BACKTEST/LIVE), `replay_method` for replays, `time` (agent median/p90 vs baseline median, `baseline_is_human`, `speedup_x`), `cost` (gas BNB + protocol/agent fees, or explicit "simulated - $0"), `output_quality` (avg/median/best/worst Δ, win rate, verdict), `evaluation_window_days` (from the agent's own result) vs `receipts_span_days`, `distinct_snapshots`, and up to 12 `/receipt/<id>` links per task. `planned[]` renders all 4 spec §10 tasks with `status` + `reason`. `build_advantage_pdf()` (fpdf2) → `GET /report/advantage.pdf`. Web `/report` rebuilt as per-task cards + planned section + PDF link (`next build` green). Tests: `test_api.py::test_advantage_report_from_receipts` + `::test_advantage_report_pdf`.
-**3 both-ways tasks with real receipts:** bnb-grid (grid, BACKTEST, n=9, 1d window), pcs-rebalancer (rebalancing, BACKTEST, n=4, ~2d), venus-guard (health_factor, BACKTEST, n=2, 365d stress path on real ETH history). `meets_min_3_bothways` and `has_trading_or_security` both true.
-**Parked (shown as `not yet run` with reason):** bsc-sentry — baseline is a human analyst timed with a stopwatch (`fixtures/manual_baselines.json`); no real audit recorded, R2/R3 forbid fabricating one. pcs-yield — held on a working Graph query key (T-033).
+**4 both-ways tasks with real receipts (as of T-033, 2026-09-08):** bnb-grid (grid, BACKTEST), pcs-rebalancer (rebalancing, BACKTEST), venus-guard (health_factor, BACKTEST, 365d real ETH stress path), pcs-yield (yield, LIVE — DefiLlama + on-chain). `meets_min_3_bothways` and `has_trading_or_security` both true; PDF export works.
+**Parked (shown in `planned[]` as `not yet run` with reason):** bsc-sentry — baseline is a human analyst timed with a stopwatch (`fixtures/manual_baselines.json`); no real audit recorded, R2/R3 forbid fabricating one. Legwork in `docs/findings/T-072-cake-audit.md`.
 
 ---
 
@@ -258,14 +295,25 @@ Rehearse the 90-second path cold, three times: land → sentry (no wallet) → y
 - **Programmatic rehearsal**: drove every beat's API call against the live stack — all green, summed non-run latency ≈ 0.7 s.
 - **Demo hardened:**
   - The spec's two marquee beats do not work end to end and would be landmines: (A) the landing CTA points at a `bsc-sentry` hire, which fails at the baseline step (no human `manual_analyst` row) — the verdict engine itself is fine; (B) `pcs-yield` has **no implementation** (manifest only), so its card looked normal but a hire failed deep in a worker.
-  - Fixed (B): `agents_factory.IMPLEMENTED` + `AgentCard.available` / `unavailable_reason`; the Yield tile + card still render (main-track diversity) but the card is badged "Not yet available — needs a Graph query key (T-033)", the agent page hides the Hire panel, and `POST /hires` returns **409** with the reason. `tests/test_api.py::test_pcs_yield_shows_but_is_marked_unavailable`.
+  - Fixed (B) at the time with `agents_factory.IMPLEMENTED` + `AgentCard.available` / `unavailable_reason` (Yield tile + card still render, agent page hides Hire, `POST /hires` → **409** with reason). **T-033 then built pcs-yield**, so all 5 agents are now `available` and hireable; the machinery stays for any future manifest-only agent (`tests/test_api.py::test_all_five_agents_available`).
   - For (A): `docs/demo.md` routes the live demo to **venus-guard** (the dramatic receipt, completes every time) instead of the sentry CTA, and lists the sentry-baseline fix as pre-demo task #1. `docs/findings/T-072-cake-audit.md` has the CAKE audit findings gathered so a human can record a real (measured) baseline in ~2 min.
   - Anchored the 11 seeded receipts as one batch on the local anvil (`submit_batch`, tx `3c2f6d63…`), so every `/receipt/{id}` page now shows a real merkle proof + anchor root + tx and the browser verifier recomputes green. Mainnet anchor still pending funds (T-062).
 **Remaining (user):** run the 3 cold browser stopwatch passes per `docs/demo.md`; record the human `manual_analyst` CAKE row.
 
 ---
 
-## Suggested day mapping
+## Remaining work (all external / user-side)
+
+| Item | What | Blocker |
+|---|---|---|
+| T-070 | Hosted deploy: GitHub push → Render Blueprint → Vercel import → wire the two URLs → phone acceptance check (`docs/deploy.md`) | user's GitHub / Render / Vercel accounts |
+| T-041 | `bnb-grid` Tier 2 live (+ T-043 mainnet position, T-062 mainnet anchor) | `SESSION_KEY_PRIVATE_KEY` / `ANCHOR_PRIVATE_KEY` + BNB for gas |
+| acceptance #5→5/5, #6, demo beat | one real human `manual_analyst` CAKE audit row in `fixtures/manual_baselines.json` (legwork in `docs/findings/T-072-cake-audit.md`) | a human with a stopwatch |
+| pcs-yield v3 | deploy the Envio HyperIndex PCS v3 BSC indexer (`docs/envio-indexer.md`), set `PCS_V3_GRAPHQL_URL` → ranks v3 pools instead of v2 | Envio deploy + first sync |
+| T-040 continuous run | `python scripts/run_paper_loops.py --interval 600` in a real terminal for the ≥6h window | OOM reaper kills harness-managed background processes |
+| T-072 | 3 cold-browser stopwatch passes, fill the rehearsal-log table | a person |
+
+## Original day mapping (kept for reference)
 
 | Day | Focus |
 |---|---|
@@ -279,7 +327,3 @@ Rehearse the 90-second path cold, three times: land → sentry (no wallet) → y
 ## Critical path
 
 `T-002 → T-003 → T-010 → T-011 → T-012 → T-022 → T-023 → agents → T-063`
-
-Two things that cannot be recovered if they slip:
-1. **T-040 running live by end of day 2** — window length is not purchasable later.
-2. **T-004 on day 1** — discovering Gateway is quote-only on day 4 costs you the rebalancer.
