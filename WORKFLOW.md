@@ -308,6 +308,29 @@ NOTE:   T-033 pcs-yield blocked on a working Graph query key (3 rejected).
   logfile + Monitor for long commands, not `... | tail`.
 - Suite 35 pass / 1 skip, ruff clean. **Gate 2 in progress** (T-022–024 next).
 
+### 2026-09-07 · T-040 bnb-grid Tier 1 (paper) · WIP — DEPLOYED + LOOPING
+- `bnb_grid/grid.py` `calibrate_grid()` (spec §5.1: k(risk)*atr/mid spacing_frac,
+  10/90 pct bounds, clamp levels 5–30, capital/levels per slot). Pure.
+- `bnb_grid/sim.py` `simulate()` — slot-based: slot i buys at lines[i], sells at
+  lines[i+1] on a LATER candle (no same-candle round trips). Slippage haircut +
+  0.25% fee + measured `swap_v2` gas per fill. Circuit breaker (§5.3): halt if
+  unrealised loss > max_loss_pct of capital, or close leaves [lower,upper] by
+  >2x spacing_frac. Deterministic (same klines+grid -> same SimResult).
+- `bnb_grid/agent.py` `BnbGridAgent(since_ms=)` — observe pulls 30d calib + the
+  window since deploy; decide=calibrate (pure); act=paper replay; report=
+  net_pnl_usd + §5.5 stats (win_rate, n_trades, window_days, max_drawdown_pct,
+  capital_at_risk_usd, all net of fees+gas). Baseline `hodl` on the same window.
+- `scripts/run_grid.py --loop` — each cycle re-simulates from deploy→now over
+  real klines and writes a receipt via the harness. State: `var/grid_deployment.json`
+  (gitignored). One `--once` cycle verified: window 0.96d, 1 trade, net +$0.03
+  vs hodl -$5.44 (Δ +$5.47), dd 0.11%, receipt written.
+- **DEPLOYED: `run_grid.py --reset --backfill-hours 24 --loop --interval 300`
+  running in the background.** Acceptance (≥6h continuous, receipts vs hodl,
+  §5.5 stats) completes once it's been up 6h — check `var/grid_deployment.json`
+  and the `receipts` table (agent_id='bnb-grid').
+- Suite 71 pass / 1 skip. ruff clean. Windows console can't encode non-ASCII on
+  stdout (cp1252) — keep runner logs ASCII.
+
 ### 2026-09-07 · T-030 + T-031 + T-032 · DONE  (Phase 3 partial; T-033 held)
 - **T-030** `services/agents/bsc_sentry/fork.py`: `anvil_fork()` cm (POA middleware,
   `FORK_RPC_URL`, free port) + `simulate_trade()` — funds an Anvil account with

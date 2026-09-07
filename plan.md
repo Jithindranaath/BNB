@@ -141,7 +141,7 @@ Net-APR model per `spec.md` §4.1 with each term displayed separately. Sentry ga
 
 ## Phase 4 — Trading agents
 
-### T-040 · `bnb-grid` Tier 1 (paper) · TODO — **START RUNNING BY END OF DAY 2**
+### T-040 · `bnb-grid` Tier 1 (paper) · WIP — **START RUNNING BY END OF DAY 2**
 Calibration per `spec.md` §5.1, paper ledger with live prices and a slippage haircut, circuit breaker per §5.3. Deploy it running continuously the moment it works — the live window length cannot be bought back later.
 **Accept:** runs continuously ≥6h without crashing, produces receipts against the `hodl` baseline, reports win rate / n_trades / window / max drawdown.
 **Deps:** T-022, T-023, T-012

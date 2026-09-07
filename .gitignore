@@ -44,3 +44,6 @@ Thumbs.db
 # --- claude code harness runtime ---
 .claude/scheduled_tasks.lock
 .claude/**/*.lock
+
+# --- runtime deployment state ---
+var/
