@@ -157,13 +157,14 @@ Stop and surface it (don't work around it silently) when:
 > Exactly one line. Update it at the OPEN step of every task.
 
 ```
-PHASE:  2 — Harness and receipts
-TASK:   T-022 · Run harness + receipt writer
+PHASE:  3 — Tier 0 agents (ship first)
+TASK:   T-030 · Anvil fork simulation harness  (highest value/hour)
 STATE:  TODO (next)
-NEXT:   T-023 baseline runners, T-024 tier enforcement
+NEXT:   T-031 bsc-sentry check suite, T-032 test set, T-033 pcs-yield
 NOTE:   subgraph.py needs a working Graph query key (3 rejected — likely Graph
-        billing not activated). gas: v3-NPM/venus units still to measure (T-042/44).
-        DB/redis: use 127.0.0.1, never localhost (Windows ::1 hangs).
+        billing not activated); pcs-yield (T-033) uses the subgraph — may block.
+        gas: v3-NPM/venus units still to measure (T-042/44).
+        DB/redis: 127.0.0.1, never localhost. Long cmds: logfile + Monitor, not `| tail`.
 ```
 
 ---
@@ -306,6 +307,30 @@ NOTE:   subgraph.py needs a working Graph query key (3 rejected — likely Graph
   Also: `| tail` in a Bash pipe hides all output until the process exits — use a
   logfile + Monitor for long commands, not `... | tail`.
 - Suite 35 pass / 1 skip, ruff clean. **Gate 2 in progress** (T-022–024 next).
+
+### 2026-09-07 · T-022 + T-023 + T-024 · DONE  (Gate 2 green)
+- **agents/base.py:** `canonical_hash(obj)` — the one hashing rule (snapshot /
+  task / merkle leaf all use it). `ExecContext` now a **frozen** dataclass with
+  `for_tier(tier, signer=)`: tier 0/1 → signer dropped; tier 2 → signer required.
+- **T-024:** tests/test_tier.py — Tier 0 & 1 hold no signer even if one is
+  passed, `require_signer()` raises, context is immutable, Tier 2 needs a signer.
+- **T-023:** orchestrator/baselines.py — `run_baseline(id, obs, manifest)` over
+  `hodl / static_range / top_headline_apr / no_action / manual_analyst / zero`.
+  Each returns `Result` in the manifest's metric+unit. Missing data →
+  `BaselineIncomplete`, never a guess. `static_range` flags the v3 gas term
+  UNMEASURED (T-042). fixtures/manual_baselines.json seeded (sample row).
+- **T-022:** orchestrator/harness.py — `run_hire(agent, tier, inputs, persist=)`:
+  validate → observe → `assert_pure`(decide×2) → act (tier<2 + signed ⇒
+  TierViolation) → report → baseline on the **same** Observation → receipt.
+  Writes 2 `runs` (paired via `pair_run_id`) + 1 `receipts` (with merkle leaf)
+  in one tx; `ensure_agent()` upserts the manifest first. `_echo` baseline →
+  `zero`. tests/test_harness.py checks the persisted receipt joins both runs
+  with a matching snapshot hash.
+- E2E sanity: 3 `_echo` hires → `refresh_agent_stats()` → n_runs=3, win_rate=1.0,
+  median_delta=30 — the whole scoring primitive works, and it validates T-021's
+  stats function against real rows.
+- Suite **53 pass / 1 skip**, ruff clean.
+- Next: **T-030** Anvil fork sim harness (Phase 3).
 
 ---
 

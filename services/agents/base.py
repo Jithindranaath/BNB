@@ -6,6 +6,8 @@ model lives in `agents.manifest`; the loader/registry in `agents.registry`.
 
 from __future__ import annotations
 
+import hashlib
+import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any
@@ -21,7 +23,16 @@ __all__ = [
     "Observation",
     "Result",
     "TierViolation",
+    "canonical_hash",
 ]
+
+
+def canonical_hash(obj: Any) -> str:
+    """sha256 of the canonicalised JSON of `obj`. The one hashing rule used for
+    both `Observation.snapshot_hash` and the harness's `data_snapshot_hash` /
+    `task_hash` / merkle leaf, so they always agree (architecture.md §6)."""
+    blob = json.dumps(obj, sort_keys=True, separators=(",", ":"), default=str)
+    return hashlib.sha256(blob.encode()).hexdigest()
 
 
 @dataclass(frozen=True)
@@ -64,16 +75,33 @@ class TierViolation(RuntimeError):
     """Raised if a Tier 0/1 context is asked to sign anything (spec.md §11.4)."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class ExecContext:
-    """`tier` gates capability. `signer` is None for tier 0 and 1 — by
-    construction, not convention (architecture.md §10)."""
+    """`tier` gates capability. For Tier 0 and 1, `signer` is None **by
+    construction** — `for_tier()` drops any signer passed, and the dataclass is
+    frozen so it can't be set later (architecture.md §10). Tier 2 requires a
+    real signer at construction time.
+    """
 
     tier: int
     signer: Any | None = None
 
+    @classmethod
+    def for_tier(cls, tier: int, signer: Any | None = None) -> ExecContext:
+        if tier not in (0, 1, 2):
+            raise ValueError(f"tier must be 0, 1 or 2 (got {tier})")
+        if tier < 2:
+            return cls(tier=tier, signer=None)  # signer dropped on purpose
+        if signer is None:
+            raise TierViolation("a Tier 2 context must be constructed with a signer")
+        return cls(tier=tier, signer=signer)
+
+    @property
+    def can_sign(self) -> bool:
+        return self.tier >= 2 and self.signer is not None
+
     def require_signer(self) -> Any:
-        if self.tier < 2 or self.signer is None:
+        if not self.can_sign:
             raise TierViolation(f"tier {self.tier} context cannot sign")
         return self.signer
 

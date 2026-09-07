@@ -1,0 +1,9 @@
+{
+  "_note": "Human-produced baselines (architecture.md §9, spec.md §3.5). Keyed by the target address, lowercase. A teammate audits the token by hand with BscScan, stopwatch running, and records wall_seconds + their written findings here. This is legitimate MEASURED data — label it clearly as human-produced; never compute or estimate these numbers.",
+  "0x0000000000000000000000000000000000000000": {
+    "label": "SAMPLE — placeholder so baseline_manual_analyst has something to read in tests. Replace with real audits in T-032.",
+    "wall_seconds": 420,
+    "analyst": "sample",
+    "findings": "n/a"
+  }
+}

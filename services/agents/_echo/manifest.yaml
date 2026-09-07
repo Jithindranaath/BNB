@@ -8,6 +8,6 @@ tiers: [0]
 inputs:
   n: { type: number, required: true, min: 0, max: 1000000 }
 data_deps: []
-baseline: manual_analyst
+baseline: zero          # utility baseline: always yields value 0 (see baselines.py)
 advantage_metric: { name: echo_value, unit: count, higher_is_better: true }
 pricing: { model: free }

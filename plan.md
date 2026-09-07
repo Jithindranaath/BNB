@@ -97,17 +97,17 @@ Implement `architecture.md` §7 exactly. Alembic migration. `agent_stats` as a m
 **Accept:** migration runs clean on an empty DB; hypertable created.
 **Deps:** T-001
 
-### T-022 · Run harness + receipt writer · TODO
+### T-022 · Run harness + receipt writer · WIP
 `harness.py`: runs observe→decide→act→report, computes `data_snapshot_hash` (sha256 of canonicalised JSON of every input `decide()` consumed), persists the run, invokes the baseline runner **on the same Observation**, writes the receipt with the advantage delta.
 **Accept:** `EchoAgent` produces a valid receipt with a baseline attached. Test: `decide()` called twice on a frozen Observation returns identical Decisions (purity test — `spec.md` §11.3).
 **Deps:** T-020, T-021
 
-### T-023 · Baseline runners · TODO
+### T-023 · Baseline runners · WIP
 `baselines.py`: `hodl`, `static_range`, `top_headline_apr`, `no_action`, `manual_analyst` (reads `fixtures/manual_baselines.json`).
 **Accept:** each runs against a fixed Observation and returns a comparable metric in the agent's declared unit.
 **Deps:** T-022, T-012
 
-### T-024 · Tier enforcement · TODO
+### T-024 · Tier enforcement · WIP
 `ExecContext` with `tier` and `signer`. Tier 0/1 construct with `signer=None`; any signing attempt raises `TierViolation`.
 **Accept:** test asserts Tier 0 and Tier 1 cannot sign (`spec.md` §11.4).
 **Deps:** T-022
