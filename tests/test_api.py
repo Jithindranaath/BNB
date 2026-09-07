@@ -59,6 +59,24 @@ def test_categories(client):
     assert all(c["agent_count"] == 1 for c in cats.values())
 
 
+def test_pcs_yield_shows_but_is_marked_unavailable(client):
+    """T-072: the yield category tile + card still render (main-track diversity),
+    but pcs-yield has no implementation yet — the card says so and a hire 409s
+    instead of failing deep in a worker thread."""
+    cards = {c["id"]: c for c in client.get("/agents").json()}
+    y = cards["pcs-yield"]
+    assert y["available"] is False and y["unavailable_reason"]
+    assert cards["bsc-sentry"]["available"] is True
+
+    d = client.get("/agents/pcs-yield").json()
+    assert d["available"] is False
+
+    r = client.post("/hires", json={"agent_id": "pcs-yield", "tier": 0,
+                                    "inputs": {"capital_usd": 500}})
+    assert r.status_code == 409
+    assert "T-033" in r.json()["detail"]
+
+
 def test_healthz_reports_each_dep(client):
     h = client.get("/healthz").json()
     assert set(h["deps"]) == {"db", "redis", "rpc", "hummingbot", "gateway"}

@@ -64,6 +64,10 @@ async def create_hire(body: dict) -> Any:
     entry = registry.load_registry().get(agent_id)
     if not entry or not entry.available or entry.manifest is None:
         raise HTTPException(404, f"no agent {agent_id!r}")
+    from .agents_factory import is_implemented, unavailable_reason
+
+    if not is_implemented(agent_id):
+        raise HTTPException(409, unavailable_reason(agent_id) or f"{agent_id!r} is not available")
     m = entry.manifest
     if tier not in m.tiers:
         raise HTTPException(422, {"tier": f"must be one of {m.tiers}"})

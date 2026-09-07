@@ -103,16 +103,25 @@ export default async function AgentPage({
 
         <div>
           <h2 className="text-xs font-medium uppercase tracking-wide text-neutral-500">Hire</h2>
-          <p className="mt-1 mb-2 text-xs text-neutral-500">
-            {agent.tiers.includes(0)
-              ? "No wallet, no funds. You get a real result."
-              : "Tier 1 is paper on live prices — no funds at risk."}
-          </p>
-          <HirePanel agent={agent} prefill={prefill} />
-          {agent.kill_switch && (
-            <p className="mt-2 text-xs text-neutral-400">
-              kill switch: halts at −{agent.kill_switch.max_loss_pct}% of capital.
-            </p>
+          {agent.available ? (
+            <>
+              <p className="mt-1 mb-2 text-xs text-neutral-500">
+                {agent.tiers.includes(0)
+                  ? "No wallet, no funds. You get a real result."
+                  : "Tier 1 is paper on live prices — no funds at risk."}
+              </p>
+              <HirePanel agent={agent} prefill={prefill} />
+              {agent.kill_switch && (
+                <p className="mt-2 text-xs text-neutral-400">
+                  kill switch: halts at −{agent.kill_switch.max_loss_pct}% of capital.
+                </p>
+              )}
+            </>
+          ) : (
+            <div className="mt-1 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+              <p className="font-medium">Not yet available</p>
+              <p className="mt-1">{agent.unavailable_reason ?? "This agent is not deployed yet."}</p>
+            </div>
           )}
         </div>
       </section>

@@ -33,6 +33,8 @@ class AgentCard(BaseModel):
     pricing: Pricing
     advantage_metric: AdvantageMetric
     sentry_gate: bool = False
+    available: bool = True
+    unavailable_reason: str | None = None
     stats: AgentStatsOut
     has_runs: bool
 

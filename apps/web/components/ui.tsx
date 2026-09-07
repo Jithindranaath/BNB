@@ -71,13 +71,20 @@ export function AgentCardView({ card }: { card: AgentCard }) {
           <span className="text-[11px] text-emerald-600">security-gated</span>
         )}
       </div>
-      <div
-        className={`mt-3 rounded-md px-2 py-1.5 text-xs ${
-          card.has_runs ? "bg-neutral-50 text-neutral-700" : "bg-neutral-50 text-neutral-400"
-        }`}
-      >
-        {fmtAdvantage(card)}
-      </div>
+      {card.available ? (
+        <div
+          className={`mt-3 rounded-md px-2 py-1.5 text-xs ${
+            card.has_runs ? "bg-neutral-50 text-neutral-700" : "bg-neutral-50 text-neutral-400"
+          }`}
+        >
+          {fmtAdvantage(card)}
+        </div>
+      ) : (
+        <div className="mt-3 rounded-md bg-amber-50 px-2 py-1.5 text-xs text-amber-700">
+          <span className="font-medium">Not yet available</span>
+          {card.unavailable_reason ? ` — ${card.unavailable_reason}` : ""}
+        </div>
+      )}
     </Link>
   );
 }

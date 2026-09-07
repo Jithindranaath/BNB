@@ -76,11 +76,14 @@ def _f(v: Any) -> float | None:
 
 
 def _card(m: Manifest) -> AgentCard:
+    from .agents_factory import is_implemented, unavailable_reason
+
     st = _stats_row(m.id)
     return AgentCard(
         id=m.id, name=m.name, category=m.category, one_liner=m.one_liner,
         tiers=list(m.tiers), pricing=m.pricing, advantage_metric=m.advantage_metric,
         sentry_gate=m.sentry_gate, stats=st, has_runs=st.n_runs > 0,
+        available=is_implemented(m.id), unavailable_reason=unavailable_reason(m.id),
     )
 
 

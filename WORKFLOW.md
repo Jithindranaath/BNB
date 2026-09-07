@@ -157,11 +157,17 @@ Stop and surface it (don't work around it silently) when:
 > Exactly one line. Update it at the OPEN step of every task.
 
 ```
-PHASE:  7 — Ship   (T-070 WIP-needs-user, T-071 done; T-033 pcs-yield HELD for Graph key)
-TASK:   T-072 · demo rehearsal (next) — time the 90-second cold path 3x
-STATE:  T-071 DONE (docs/acceptance.md: 5 PASS / 4 PARTIAL / 0 faked)
-NEXT:   T-072; and the user completes T-070 (GitHub push -> Render Blueprint ->
-        Vercel import -> URL wiring -> phone check, per docs/deploy.md)
+PHASE:  7 — Ship   (T-070 needs-user, T-071 + T-072 done; T-033 pcs-yield HELD)
+TASK:   — all agent-side Phase 7 work done. Handoff to the user.
+STATE:  T-072 DONE (docs/demo.md + programmatic rehearsal; demo hardened:
+        pcs-yield landmine fixed, batch anchored on anvil)
+NEXT (user):
+  1. T-070 hosted deploy: GitHub push -> Render Blueprint -> Vercel import ->
+     URL wiring -> phone check (docs/deploy.md).
+  2. T-072: 3 cold browser stopwatch passes (docs/demo.md rehearsal log).
+  3. Record a real human manual_analyst CAKE row (docs/findings/T-072-cake-audit.md)
+     -> unblocks acceptance #5/#6 + the sentry demo beat.
+  4. T-033: a working Graph query key -> build pcs_yield/agent.py + sentry gate.
 NOTE:   Free stack: orchestrator → Render free Docker web service + Render/Neon free
         Postgres (Timescale optional now); web → Vercel; NO Redis (cache self-bypasses).
         Funds gate still open: T-041, T-043, T-062 mainnet anchor (anvil-proven).
@@ -569,6 +575,38 @@ NOTE:   Free stack: orchestrator → Render free Docker web service + Render/Neo
   intact. Re-seeded bnb-grid (5) + pcs-rebalancer (5) + venus-guard (1).
 - Suite: 70 non-live + 41 live pass, 1 skip (subgraph / GRAPH_API_KEY). ruff clean.
 - Next: **T-072** demo rehearsal; user finishes the hosted half of T-070.
+
+---
+
+### 2026-09-07 · T-072 · demo rehearsal + demo hardening
+- `docs/demo.md` — the 90-second script: per-beat click sequence, lines to say,
+  and the **measured** backend latency of every beat (all reads < 50 ms, PDF
+  ~0.5 s, grid Tier-1 hire ~2 s, venus-guard hire ~12 s). Pre-demo checklist +
+  a rehearsal-log template for the 3 cold stopwatch passes (a person's job — not
+  faked).
+- **Programmatic rehearsal**: drove every beat's API call against the running
+  stack — all green, summed non-run latency ≈ 0.7 s.
+- **Two spec-marquee beats were demo landmines; hardened:**
+  - `pcs-yield` has **no `agent.py`** (manifest only, T-033). Its card looked
+    normal but a hire raised `NotImplementedError` deep in a worker thread. Added
+    `agents_factory.IMPLEMENTED` + `AgentCard.available` / `unavailable_reason`;
+    `_card()` and `POST /hires` use it. The Yield tile + card still render
+    (main-track diversity is scored) but the card is badged "Not yet available",
+    the agent page hides the Hire panel, and a hire returns **409** with the
+    reason. `test_api.py::test_pcs_yield_shows_but_is_marked_unavailable`.
+  - The landing CTA (spec §9.2, immutable) points at a `bsc-sentry` hire, which
+    fails at the baseline step — `manual_analyst` has only the sample row. The
+    verdict engine is fine (`test_sentry.py` live). `docs/demo.md` routes the
+    live demo through **venus-guard** instead and lists the fix as pre-demo
+    task #1; `docs/findings/T-072-cake-audit.md` has the CAKE audit gathered so a
+    human records a *measured* baseline in ~2 min (the fixture rule forbids
+    estimating it, so I did not).
+- Anchored the 11 seeded receipts as one batch on the local anvil
+  (`submit_batch`, tx `3c2f6d63…` block 8) — every `/receipt/{id}` now shows a
+  real proof + anchor root + tx and the browser verifier recomputes green.
+- `next build` green; 70 non-live + 11 live (test_api) pass; ruff clean.
+- **Phase 7 agent-side work is done.** Open items are all the user's: T-070
+  hosted deploy, the 3 cold demo passes, the human CAKE baseline, and T-033.
 
 ---
 

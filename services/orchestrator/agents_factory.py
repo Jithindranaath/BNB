@@ -4,6 +4,27 @@ from __future__ import annotations
 
 from agents.base import Agent
 
+# Agents with a working implementation (a valid manifest alone is not enough —
+# pcs-yield ships a manifest so its category tile + card render, but has no
+# agent.py yet: T-033, held for a Graph query key).
+IMPLEMENTED: dict[str, str | None] = {
+    "bsc-sentry": None,
+    "bnb-grid": None,
+    "pcs-rebalancer": None,
+    "venus-guard": None,
+    "pcs-yield": "Not yet available — needs a The Graph query key for the "
+                 "PancakeSwap v3 subgraph (T-033).",
+}
+
+
+def is_implemented(agent_id: str) -> bool:
+    return IMPLEMENTED.get(agent_id, "unknown agent") is None
+
+
+def unavailable_reason(agent_id: str) -> str | None:
+    r = IMPLEMENTED.get(agent_id, f"no implementation registered for {agent_id!r}")
+    return None if r is None else r
+
 
 def build_agent(agent_id: str, **kwargs) -> Agent:
     if agent_id == "bsc-sentry":

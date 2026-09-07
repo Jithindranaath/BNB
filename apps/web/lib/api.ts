@@ -31,6 +31,8 @@ export type AgentCard = {
   pricing: Pricing;
   advantage_metric: AdvantageMetric;
   sentry_gate: boolean;
+  available: boolean;
+  unavailable_reason: string | null;
   stats: AgentStats;
   has_runs: boolean;
 };

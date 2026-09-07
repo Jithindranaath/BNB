@@ -243,8 +243,17 @@ Walk every item in `spec.md` §11 and record pass/fail honestly in `docs/accepta
 **Fixed during the pass:** `tests/test_db_migration.py` was running `alembic downgrade base` / `upgrade head` against the **dev DB** — dropped `runs`+`receipts` on every `-m live` run. Rewritten to use a throwaway `proofstand_migtest` database; a full live run now leaves receipts intact. Re-seeded the 3 agents' receipts.
 **Suite:** 111 passed, 1 skipped (subgraph, needs `GRAPH_API_KEY`).
 
-### T-072 · Demo rehearsal · TODO
+### T-072 · Demo rehearsal · DONE (script + programmatic rehearsal; 3 cold browser runs handed to the user, staged)
 Rehearse the 90-second path cold, three times: land → sentry (no wallet) → yield with the sentry exclusion visible → grid receipt with drawdown → anchored proof. Time it.
+**Done:**
+- `docs/demo.md` — the 90-second script: per-beat clicks, what to say, and the **measured** backend latency of every beat (reads < 50 ms each, PDF ~0.5 s, grid Tier-1 hire ~2 s, venus-guard hire ~12 s). Pre-demo checklist + a rehearsal-log template for the 3 cold stopwatch runs (a human task — templated, not faked).
+- **Programmatic rehearsal**: drove every beat's API call against the live stack — all green, summed non-run latency ≈ 0.7 s.
+- **Demo hardened:**
+  - The spec's two marquee beats do not work end to end and would be landmines: (A) the landing CTA points at a `bsc-sentry` hire, which fails at the baseline step (no human `manual_analyst` row) — the verdict engine itself is fine; (B) `pcs-yield` has **no implementation** (manifest only), so its card looked normal but a hire failed deep in a worker.
+  - Fixed (B): `agents_factory.IMPLEMENTED` + `AgentCard.available` / `unavailable_reason`; the Yield tile + card still render (main-track diversity) but the card is badged "Not yet available — needs a Graph query key (T-033)", the agent page hides the Hire panel, and `POST /hires` returns **409** with the reason. `tests/test_api.py::test_pcs_yield_shows_but_is_marked_unavailable`.
+  - For (A): `docs/demo.md` routes the live demo to **venus-guard** (the dramatic receipt, completes every time) instead of the sentry CTA, and lists the sentry-baseline fix as pre-demo task #1. `docs/findings/T-072-cake-audit.md` has the CAKE audit findings gathered so a human can record a real (measured) baseline in ~2 min.
+  - Anchored the 11 seeded receipts as one batch on the local anvil (`submit_batch`, tx `3c2f6d63…`), so every `/receipt/{id}` page now shows a real merkle proof + anchor root + tx and the browser verifier recomputes green. Mainnet anchor still pending funds (T-062).
+**Remaining (user):** run the 3 cold browser stopwatch passes per `docs/demo.md`; record the human `manual_analyst` CAKE row.
 
 ---
 
