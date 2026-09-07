@@ -41,10 +41,20 @@
     "venus_repay_borrow": {
       "gas": 205180,
       "verified": true
+    },
+    "v2_add_liquidity": {
+      "gas": 177115,
+      "verified": true
+    },
+    "v2_remove_liquidity": {
+      "gas": 140839,
+      "verified": true
     }
   },
   "v3_measured_at_block": 120503023,
   "v3_measured_at": "2026-09-07T13:33:13.244650+00:00",
   "venus_measured_at_block": 120506561,
-  "venus_measured_at": "2026-09-07T14:00:00.785765+00:00"
+  "venus_measured_at": "2026-09-07T14:00:00.785765+00:00",
+  "v2_lp_measured_at_block": 120548210,
+  "v2_lp_measured_at": "2026-09-07T19:12:16.448630+00:00"
 }

@@ -132,10 +132,18 @@ Build `fixtures/security_testset.json` (~150 bad from public rug post-mortems wi
 **Accept:** measured numbers written to `fixtures/security_results.json` and surfaced on the agent card.
 **Deps:** T-031
 
-### T-033 · `pcs-yield` · TODO
+### T-033 · `pcs-yield` · DONE (DefiLlama + on-chain; Envio v3 feed is an upgrade path)
 Net-APR model per `spec.md` §4.1 with each term displayed separately. Sentry gate per §4.2 with a visible "excluded by security agent" section.
 **Accept:** ranks ≥20 real PCS pools; at least one pool visibly excluded by sentry; each ranking shows the full subtraction from headline to net.
 **Deps:** T-031, T-012, T-023
+**Done:**
+- `services/agents/pcs_yield/` — `economics.py` (pure `net_apr` = fee + emission·decay − IL − amortised_gas − dilution, each term returned separately; `emission_decay_factor`, `dilution_adjustment` from DefiLlama TVL trend), `sources.py` (DefiLlama `pancakeswap-amm` BSC universe + Binance ratio-vol per pair + TVL history), `agent.py` (`PcsYieldAgent`, Tier 0). Fee APR uses DefiLlama `apyMean30d` (stable) with `apyBase`/`apy` as the headline the naive baseline chases — so **DOGE-WBNB headline 998% → net ~22%** renders exactly like spec §4.1's example.
+- Sentry gate (§4.2): `observe()` runs `bsc_sentry.gather` + `score_report` on the shortlist's non-allowlist tokens on one anvil fork; CRITICAL → pool excluded, shown in `excluded_by_security_agent` (always present, even if empty). Blue-chip allowlist skips the fork sim.
+- `baseline_top_headline_apr` rewritten: the naive picker chooses by headline APR and reports **that pool's realistic `net_apr_pct`** ("where the naive pick loses money, show it"). Real hire: agent net 25.7% vs naive pick's real 21.8% → **+3.8 pp, favorable**.
+- `agents_factory`: pcs-yield implemented; marketplace hires it. `tests/test_pcs_yield.py` (3 pure + 2 live pass). Seeded 1 receipt → 4/5 agents have receipts, `/report` shows 4 tasks.
+- Gas: `scripts/measure_v2_lp_gas.py` measured `v2_add_liquidity` 177115 / `v2_remove_liquidity` 140839 on an anvil fork → `fixtures/gas_units.json`.
+**Data note:** DefiLlama has no PancakeSwap **v3** BSC feed, so this ranks **v2** pools. The Graph's decentralised network has no synced PCS v3 BSC subgraph either (`docs/findings/T-003.md`). The v3 fee/day-data source is a self-hosted **Envio HyperIndex** indexer — `docs/envio-indexer.md` (config ready; `ENVIO_API_TOKEN` set; deploy + `PCS_V3_GRAPHQL_URL` is the remaining step). The economics don't change when the source switches.
+**Not yet demonstrated:** a *visible sentry exclusion* — the DefiLlama PCS v2 BSC set is all blue-chip (no CRITICAL). A risky pool in the universe (or the v3 feed's long tail) would light it up.
 
 ---
 

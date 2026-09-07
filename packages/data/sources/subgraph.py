@@ -1,9 +1,12 @@
 """PancakeSwap v3 subgraph — pools, poolDayDatas, ticks, positions.
 
-Needs a Graph **query** API key (GRAPH_API_KEY) and a `verified: true` entry in
-reference/subgraphs.json. Both are pending (docs/findings/T-003.md): a deploy key
-was supplied, not a query key. The client is complete; its live test skips until
-the key lands and `scripts/probe/pcs_subgraph.ts` finalises the id.
+PARKED. GRAPH_API_KEY is valid, but The Graph's decentralised network has no
+synced PancakeSwap v3 BSC subgraph (both candidate ids are dead — see
+docs/findings/T-003.md). `pcs-yield` ships instead on DefiLlama v2 + Binance +
+the on-chain sentry gate (T-033). The real v3 fee/day-data source is a
+self-hosted Envio HyperIndex indexer (docs/envio-indexer.md); when it is live,
+this client is rewritten for the Hasura dialect and pointed at
+`settings().pcs_v3_graphql_url`, and a probe is added under scripts/probe/ (R5).
 """
 
 from __future__ import annotations

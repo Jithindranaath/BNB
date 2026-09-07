@@ -32,6 +32,11 @@ class Settings(BaseSettings):
     bscscan_api_key: str = ""
     binance_base_url: str = "https://api.binance.com"
     defillama_base_url: str = "https://yields.llama.fi"
+    # PancakeSwap v3 BSC fee/day data — a self-hosted Envio HyperIndex indexer
+    # (docs/envio-indexer.md). Empty until deployed; pcs-yield falls back to
+    # DefiLlama v2 + Binance until then.
+    envio_api_token: str = ""
+    pcs_v3_graphql_url: str = ""
 
     @property
     def has_graph_key(self) -> bool:

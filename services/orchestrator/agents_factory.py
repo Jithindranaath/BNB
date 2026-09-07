@@ -4,16 +4,13 @@ from __future__ import annotations
 
 from agents.base import Agent
 
-# Agents with a working implementation (a valid manifest alone is not enough —
-# pcs-yield ships a manifest so its category tile + card render, but has no
-# agent.py yet: T-033, held for a Graph query key).
+# Agents with a working implementation (a valid manifest alone is not enough).
 IMPLEMENTED: dict[str, str | None] = {
     "bsc-sentry": None,
     "bnb-grid": None,
     "pcs-rebalancer": None,
     "venus-guard": None,
-    "pcs-yield": "Not yet available — needs a The Graph query key for the "
-                 "PancakeSwap v3 subgraph (T-033).",
+    "pcs-yield": None,  # T-033: DefiLlama + on-chain path; Envio v3 feed is an upgrade
 }
 
 
@@ -44,7 +41,9 @@ def build_agent(agent_id: str, **kwargs) -> Agent:
 
         return VenusGuardAgent(**kwargs)
     if agent_id == "pcs-yield":
-        raise NotImplementedError("pcs-yield (T-033) is held pending a Graph query key")
+        from agents.pcs_yield.agent import PcsYieldAgent
+
+        return PcsYieldAgent(**kwargs)
     if agent_id == "_echo":
         from agents._echo.agent import EchoAgent
 

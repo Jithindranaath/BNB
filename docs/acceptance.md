@@ -1,7 +1,8 @@
 # Acceptance pass — spec.md §11 (T-071)
 
-Walked 2026-09-07. Each item verified by running the command / test named, not
-from memory. A partial is recorded as a partial — the exact blocker is stated.
+Walked 2026-09-07; #5 and #33-related items refreshed 2026-09-08. Each item
+verified by running the command / test named, not from memory. A partial is
+recorded as a partial — the exact blocker is stated.
 
 | # | Criterion | Result |
 |---|---|---|
@@ -9,7 +10,7 @@ from memory. A partial is recorded as a partial — the exact blocker is stated.
 | 2 | `verify_reference.ts` passes; every address `verified: true` + source | **PASS** |
 | 3 | A test proves `decide()` is pure | **PASS** |
 | 4 | A test proves Tier 0/1 cannot sign | **PASS** |
-| 5 | All five agents complete a run + receipt with a baseline | **PARTIAL — 3/5** |
+| 5 | All five agents complete a run + receipt with a baseline | **PARTIAL — 4/5** |
 | 6 | Stranger reaches a real `bsc-sentry` result from `/`, no wallet, < 2 min | **PARTIAL** |
 | 7 | Every performance number in the UI shows `n` and window | **PASS** |
 | 8 | ≥1 receipt batch anchored on BSC, merkle proof verifies client-side | **PARTIAL — proven on a local chain, not mainnet** |
@@ -25,9 +26,9 @@ blockers, all already tracked:
 - **Funded keys** — `ANCHOR_PRIVATE_KEY` + BNB for gas (#8), `SESSION_KEY_PRIVATE_KEY`
   for Tier-2 live (T-041 / T-043).
 - **`fixtures/manual_baselines.json` has no real human audit** (only the sample
-  row) and **The Graph query key** is not live (T-033) — together these keep
-  `bsc-sentry` and `pcs-yield` from forming a both-ways receipt (#5), and make a
-  `bsc-sentry` *marketplace hire* fail at the baseline step (#6).
+  row) — keeps `bsc-sentry` from a both-ways receipt (#5) and makes a `bsc-sentry`
+  *marketplace hire* fail at the baseline step (#6). `pcs-yield` now ships
+  (T-033, DefiLlama + on-chain) and has a receipt, so #5 is 4/5.
 
 ---
 
@@ -80,7 +81,7 @@ $ pytest -q tests/test_tier.py tests/test_harness.py -k "pure or sign or signer 
 is frozen, and Tier 2 requires a signer. The harness additionally raises if a
 Tier 0/1 agent's `act()` returns signed actions. 7/7 pass (item 3 run above).
 
-## 5. Five agents → run + receipt with a baseline — PARTIAL (3/5)
+## 5. Five agents → run + receipt with a baseline — PARTIAL (4/5)
 
 Real both-ways receipts in the dev DB right now:
 
@@ -88,18 +89,21 @@ Real both-ways receipts in the dev DB right now:
 |---|---|---|---|---|
 | `bnb-grid` | grid | 5 | hodl | OK |
 | `pcs-rebalancer` | rebalancing | 5 | static_range | OK |
+| `pcs-yield` | yield | 1 | top_headline_apr | OK (2026-09-08) |
 | `venus-guard` | health_factor | 1 | no_action | OK |
 | `bsc-sentry` | security | 0 | manual_analyst | **blocked** |
-| `pcs-yield` | yield | 0 | top_headline_apr | **blocked** |
 
+- `pcs-yield` (T-033) now ships on DefiLlama (PancakeSwap v2 BSC) + Binance vol +
+  the on-chain sentry gate. A real hire ranks the v2 pool universe and beats the
+  naive `top_headline_apr` pick by ~3.8 pp (`tests/test_pcs_yield.py`, live).
+  The v3 fee/day-data upgrade is a self-hosted Envio indexer, `docs/envio-indexer.md`.
 - `bsc-sentry` **runs** and produces a real verdict + per-check evidence on
   mainnet (`tests/test_sentry.py::test_full_report_on_known_good_token`, live,
   2 pass), but its baseline is a human analyst timed with a stopwatch and
   `fixtures/manual_baselines.json` holds only the sample row — so no both-ways
   receipt. R2/R3 forbid inventing the human number. Fix: a teammate records one
-  real audit (address, wall seconds, findings) into that file.
-- `pcs-yield` is held for a working Graph query key (T-033); it needs the PCS v3
-  subgraph to route.
+  real audit (address, wall seconds, findings) into that file — legwork gathered
+  in `docs/findings/T-072-cake-audit.md`.
 
 The receipt schema requires a baseline (`baseline_run_id NOT NULL`), so "runs but
 no baseline" cannot itself be persisted as a receipt — by design.

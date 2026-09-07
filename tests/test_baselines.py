@@ -64,14 +64,24 @@ def test_static_range_baseline_accepts_fee_apr_shortcut():
     assert r.outputs["fee_apr"] == 0.20 and r.outputs["fees_usd"] > 0
 
 
-def test_top_headline_apr_baseline():
+def test_top_headline_apr_baseline_reports_the_naive_picks_net_apr():
     m = _manifest("pcs-yield")
+    # the naive picker chases apy=240 (pool b), but b's realistic net is 31%
     obs = _obs(pools=[
-        {"pool": "a", "apy": 12.0}, {"pool": "b", "apy": 240.0}, {"pool": "c", "apy": 31.0}
+        {"pool": "a", "apy": 12.0, "net_apr_pct": 11.5},
+        {"pool": "b", "apy": 240.0, "net_apr_pct": 31.0},
+        {"pool": "c", "apy": 31.0, "net_apr_pct": 28.0},
     ])
     r = baselines.run_baseline("top_headline_apr", obs, m)
-    assert r.metric == "net_apr_delta_pct" and r.value == 240.0
-    assert r.outputs["top_pool"] == "b"
+    assert r.metric == "net_apr_delta_pct" and r.value == 31.0
+    assert r.outputs["top_pool"] == "b" and r.outputs["headline_apr_pct"] == 240.0
+
+
+def test_top_headline_apr_baseline_falls_back_to_headline_without_net():
+    m = _manifest("pcs-yield")
+    obs = _obs(pools=[{"pool": "a", "apy": 12.0}, {"pool": "b", "apy": 240.0}])
+    r = baselines.run_baseline("top_headline_apr", obs, m)
+    assert r.value == 240.0 and r.outputs["basis"] == "headline"
 
 
 def test_no_action_baseline_liquidation_and_safe():

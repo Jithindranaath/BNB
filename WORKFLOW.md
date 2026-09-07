@@ -157,17 +157,18 @@ Stop and surface it (don't work around it silently) when:
 > Exactly one line. Update it at the OPEN step of every task.
 
 ```
-PHASE:  7 — Ship   (T-070 needs-user, T-071 + T-072 done; T-033 pcs-yield HELD)
-TASK:   — all agent-side Phase 7 work done. Handoff to the user.
-STATE:  T-072 DONE (docs/demo.md + programmatic rehearsal; demo hardened:
-        pcs-yield landmine fixed, batch anchored on anvil)
+PHASE:  7 — Ship   (T-070 needs-user; T-071/T-072/T-033 done)
+TASK:   — all agent-side work done (5/5 agents built). Handoff to the user.
+STATE:  T-033 DONE (pcs-yield on DefiLlama + on-chain + sentry gate; Envio v3
+        indexer scaffolded in docs/envio-indexer.md as an upgrade)
 NEXT (user):
   1. T-070 hosted deploy: GitHub push -> Render Blueprint -> Vercel import ->
      URL wiring -> phone check (docs/deploy.md).
   2. T-072: 3 cold browser stopwatch passes (docs/demo.md rehearsal log).
   3. Record a real human manual_analyst CAKE row (docs/findings/T-072-cake-audit.md)
-     -> unblocks acceptance #5/#6 + the sentry demo beat.
-  4. T-033: a working Graph query key -> build pcs_yield/agent.py + sentry gate.
+     -> unblocks acceptance #5 (4/5 -> 5/5) + #6 + the sentry demo beat.
+  4. Deploy the Envio HyperIndex PCS v3 BSC indexer (docs/envio-indexer.md), set
+     PCS_V3_GRAPHQL_URL -> pcs-yield ranks v3 pools instead of v2.
 NOTE:   Free stack: orchestrator → Render free Docker web service + Render/Neon free
         Postgres (Timescale optional now); web → Vercel; NO Redis (cache self-bypasses).
         Funds gate still open: T-041, T-043, T-062 mainnet anchor (anvil-proven).
@@ -605,8 +606,46 @@ NOTE:   Free stack: orchestrator → Render free Docker web service + Render/Neo
   (`submit_batch`, tx `3c2f6d63…` block 8) — every `/receipt/{id}` now shows a
   real proof + anchor root + tx and the browser verifier recomputes green.
 - `next build` green; 70 non-live + 11 live (test_api) pass; ruff clean.
-- **Phase 7 agent-side work is done.** Open items are all the user's: T-070
-  hosted deploy, the 3 cold demo passes, the human CAKE baseline, and T-033.
+
+---
+
+### 2026-09-08 · T-033 · pcs-yield built (DefiLlama + on-chain) + Envio scaffold
+- **The Graph key works but is a dead end for T-033.** `GRAPH_API_KEY` a659ad1a…
+  authenticates fine (proved on Uniswap v3 mainnet), but neither PancakeSwap v3
+  BSC subgraph on the decentralised network is usable — `78EUqz…` is Messari
+  schema + 5 weeks stale + "bad indexers" on data queries; `Hv1Gnc…` has no
+  healthy indexers. Long-standing BNB-throughput problem. Recorded in
+  `docs/findings/T-003.md` + `subgraphs.json`.
+- **pcs-yield shipped on data that works today.** `services/agents/pcs_yield/`:
+  `economics.py` (pure `net_apr` = fee + emission·decay − IL − amortised_gas −
+  dilution, every term returned separately), `sources.py` (DefiLlama
+  `pancakeswap-amm` BSC universe + Binance ratio-vol per pair + TVL-trend
+  history), `agent.py` (Tier 0). Fee APR = DefiLlama `apyMean30d` (stable);
+  `apy`/`apyBase` is the headline the naive baseline chases → **DOGE-WBNB
+  headline 998% → net ~22%** renders exactly like spec §4.1's example.
+- **`baseline_top_headline_apr` rewritten**: the naive picker chooses by headline
+  APR and reports *that pool's realistic net_apr_pct* ("where the naive pick
+  loses money, show it"). Real hire: agent net 25.7% vs naive pick's real 21.8%
+  → **+3.8 pp favorable**.
+- **Sentry gate (§4.2)**: `observe()` runs `bsc_sentry.gather` + `score_report`
+  on the shortlist's non-allowlist tokens on one anvil fork; CRITICAL → excluded,
+  shown in `excluded_by_security_agent` (always present). Blue-chip allowlist
+  skips the fork sim. The DefiLlama PCS v2 set is all blue-chip so no exclusion
+  fires yet — a risky pool (or the v3 long tail) would light it up.
+- Gas: `scripts/measure_v2_lp_gas.py` → `v2_add_liquidity` 177115 /
+  `v2_remove_liquidity` 140839 on an anvil fork → `fixtures/gas_units.json`.
+- `agents_factory`: pcs-yield implemented; marketplace hires it (no more 409).
+  `tests/test_pcs_yield.py` (3 pure + 2 live pass). Seeded 1 receipt → **4/5
+  agents have receipts**, `/report` shows 4 tasks (pcs-yield LIVE).
+- **Envio HyperIndex** is the v3 upgrade path: `docs/envio-indexer.md` has the
+  exact `enviodev/uniswap-v3-indexer` fork + BSC/PancakeSwap `config.yaml` block
+  + `chains.ts` entry (factory `0x0BFbCF9f…`, WBNB/USDT v3 pool
+  `0x172fcd41…`, start block 26956207) + deploy steps. `ENVIO_API_TOKEN` +
+  `PCS_V3_GRAPHQL_URL` in `.env`/`.env.example`; `subgraph.py` parked for the
+  Hasura-dialect rewrite once the endpoint is live.
+- Suite: 74 non-live + api/sources live pass, 1 skip (parked subgraph). ruff clean.
+- **All 5 agents now built.** Remaining is the user's: T-070 deploy, the demo
+  passes, the human CAKE baseline, and deploying the Envio indexer.
 
 ---
 

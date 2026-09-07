@@ -107,21 +107,30 @@ def baseline_static_range(obs: Observation, manifest: Manifest) -> Result:
 
 
 def baseline_top_headline_apr(obs: Observation, manifest: Manifest) -> Result:
-    """needs obs.data: `pools` (list of dicts with an `apy`/`apr` field, in %).
-    Returns the top advertised APR — the agent's net APR minus this is the
-    `net_apr_delta_pct`."""
+    """The naive picker: choose the pool with the highest *advertised* APR
+    (`apy`/`apr`/`headline_apr`), no risk adjustment. It then reports what that
+    pool realistically yields: its `net_apr_pct` if the Observation carries one
+    (pcs-yield's `observe()` scores every candidate), else the raw headline.
+    The agent's `net_apr_pct` minus this is `net_apr_delta_pct` — "where the
+    naive pick loses money, show it" (spec §4.3)."""
     (pools,) = _need(obs, "pools")
     if not pools:
         raise BaselineIncomplete("no pools to rank")
 
-    def _apr(p: dict) -> float:
-        for k in ("apr", "apy", "headline_apr"):
+    def _headline(p: dict) -> float:
+        for k in ("apr", "apy", "headline_apr", "headline_apr_pct"):
             if p.get(k) is not None:
                 return float(p[k])
         raise BaselineIncomplete(f"pool has no apr/apy field: {p}")
 
-    top = max(pools, key=_apr)
-    return _metric(manifest, _apr(top), top_pool=top.get("pool") or top.get("symbol"))
+    top = max(pools, key=_headline)
+    value = float(top["net_apr_pct"]) if top.get("net_apr_pct") is not None else _headline(top)
+    return _metric(
+        manifest, value,
+        top_pool=top.get("pool") or top.get("symbol"),
+        headline_apr_pct=_headline(top),
+        basis="net_apr_pct" if top.get("net_apr_pct") is not None else "headline",
+    )
 
 
 def baseline_no_action(obs: Observation, manifest: Manifest) -> Result:

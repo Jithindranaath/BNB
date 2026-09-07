@@ -26,6 +26,7 @@ class Pool(BaseModel):
     apy: float | None = None
     apy_base: float | None = Field(default=None, alias="apyBase")
     apy_reward: float | None = Field(default=None, alias="apyReward")
+    apy_mean_30d: float | None = Field(default=None, alias="apyMean30d")
     il_7d: float | None = Field(default=None, alias="il7d")
     underlying_tokens: list[str] | None = Field(default=None, alias="underlyingTokens")
     pool_meta: str | None = Field(default=None, alias="poolMeta")

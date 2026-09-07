@@ -59,22 +59,14 @@ def test_categories(client):
     assert all(c["agent_count"] == 1 for c in cats.values())
 
 
-def test_pcs_yield_shows_but_is_marked_unavailable(client):
-    """T-072: the yield category tile + card still render (main-track diversity),
-    but pcs-yield has no implementation yet — the card says so and a hire 409s
-    instead of failing deep in a worker thread."""
+def test_all_five_agents_available(client):
+    """T-033: pcs-yield now has an implementation (DefiLlama + on-chain path), so
+    every card is available and hireable. The `available` flag + 409-on-unbuilt
+    machinery from T-072 stays wired for any future manifest-only agent."""
     cards = {c["id"]: c for c in client.get("/agents").json()}
-    y = cards["pcs-yield"]
-    assert y["available"] is False and y["unavailable_reason"]
-    assert cards["bsc-sentry"]["available"] is True
-
-    d = client.get("/agents/pcs-yield").json()
-    assert d["available"] is False
-
-    r = client.post("/hires", json={"agent_id": "pcs-yield", "tier": 0,
-                                    "inputs": {"capital_usd": 500}})
-    assert r.status_code == 409
-    assert "T-033" in r.json()["detail"]
+    assert set(cards) == REAL_AGENTS
+    for c in cards.values():
+        assert c["available"] is True and c["unavailable_reason"] is None
 
 
 def test_healthz_reports_each_dep(client):
