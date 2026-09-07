@@ -1,6 +1,18 @@
 {
-  "status": "BLOCKED",
-  "source": "BscScan API (etherscan v2, chainid=56)",
-  "error": "needs BSCSCAN_API_KEY",
-  "at": "2026-09-06T19:55:28.820Z"
+  "endpoint": "https://api.etherscan.io/v2/api",
+  "target": "0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865",
+  "hasKey": true,
+  "getsourcecode": {
+    "status": "1",
+    "message": "OK",
+    "contractName": "PancakeV3Factory",
+    "compilerVersion": "v0.7.6+commit.7338295f",
+    "abiLength": 5241,
+    "raw": "(ABI + source omitted for size)"
+  },
+  "getcontractcreation": {
+    "status": "0",
+    "message": "NOTOK",
+    "result": "Free API access is not supported for this chain. Please upgrade your api plan for full chain coverage. https://etherscan.io/apis"
+  }
 }

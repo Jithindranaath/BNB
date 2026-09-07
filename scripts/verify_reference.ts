@@ -16,6 +16,7 @@
  * Run:  cd scripts && npm install && npm run verify:reference
  */
 
+import "./_env.ts";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
@@ -160,7 +161,8 @@ async function main() {
   for (const [k, v] of Object.entries<any>(tokens.bsc?.tokens ?? {}))
     await checkTokenEntry(`tokens.${k}`, v);
 
-  // subgraphs: informational only
+  // subgraphs: PENDING while verified:false; once verified:true, prove it with a live _meta query
+  const GRAPH_KEY = process.env.GRAPH_API_KEY ?? "";
   const subEntries = Object.entries<any>(subgraphs).filter(([k]) => !k.startsWith("_"));
   const subPending = subEntries.filter(([, v]) => v.verified !== true);
   const subClaimed = subEntries.filter(([, v]) => v.verified === true);
@@ -168,12 +170,30 @@ async function main() {
   for (const s of ok) console.log(`  ok  ${s}`);
   console.log("");
   for (const [k] of subPending)
-    console.log(`  --  subgraphs.${k}: PENDING (needs GRAPH_API_KEY; resolved in T-003)`);
-  for (const [k] of subClaimed)
-    problems.push({
-      where: `subgraphs.${k}`,
-      reason: "marked verified:true but this script cannot resolve subgraphs — verify in T-003",
-    });
+    console.log(`  --  subgraphs.${k}: PENDING (needs a Graph query API key; finalised in T-003)`);
+
+  for (const [k, v] of subClaimed) {
+    const label = `subgraphs.${k}`;
+    if (!GRAPH_KEY) {
+      problems.push({ where: label, reason: "verified:true but GRAPH_API_KEY unset — cannot confirm" });
+      continue;
+    }
+    try {
+      const url = String(v.gateway).replace("{GRAPH_API_KEY}", GRAPH_KEY).replace("{id}", v.id);
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ query: "{ _meta { block { number } } }" }),
+      });
+      const j: any = await res.json();
+      const block = j?.data?._meta?.block?.number;
+      if (!block) throw new Error(j?.errors?.[0]?.message ?? "no _meta.block.number");
+      ok.push(`${label} (indexed to block ${block})`);
+      console.log(`  ok  ${label} (block ${block})`);
+    } catch (err) {
+      problems.push({ where: label, reason: (err as Error).message });
+    }
+  }
 
   if (problems.length) {
     console.error(`\n${problems.length} problem(s):\n`);

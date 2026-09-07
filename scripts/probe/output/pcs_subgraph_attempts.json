@@ -1,7 +1,26 @@
 {
   "attempts": [
     {
-      "note": "GRAPH_API_KEY unset — skipped decentralised-network gateway"
+      "url": "https://gateway.thegraph.com/api/***/subgraphs/id/78EUqzJmEVJsAKvWghn7qotf9LVGqcTQxJhT5z84ZmgJ",
+      "httpStatus": 200,
+      "ok": false,
+      "errors": [
+        {
+          "message": "auth error: API key not found"
+        }
+      ],
+      "id": "78EUqzJmEVJsAKvWghn7qotf9LVGqcTQxJhT5z84ZmgJ"
+    },
+    {
+      "url": "https://gateway.thegraph.com/api/***/subgraphs/id/Hv1GncLY5docZoGtXjo4kwbTvxm3MAhVZqBZE4sUT9eZ",
+      "httpStatus": 200,
+      "ok": false,
+      "errors": [
+        {
+          "message": "auth error: API key not found"
+        }
+      ],
+      "id": "Hv1GncLY5docZoGtXjo4kwbTvxm3MAhVZqBZE4sUT9eZ"
     },
     {
       "url": "https://api.thegraph.com/subgraphs/name/pancakeswap/exchange-v3-bsc",

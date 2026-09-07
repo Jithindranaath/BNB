@@ -1,6 +1,6 @@
 {
   "status": "BLOCKED",
   "source": "PancakeSwap v3 BSC subgraph",
-  "error": "GRAPH_API_KEY not set",
-  "at": "2026-09-06T19:55:25.661Z"
+  "error": "no candidate id returned a pool — see attempts[]",
+  "at": "2026-09-07T11:51:04.462Z"
 }

@@ -47,6 +47,14 @@ main(async () => {
     getcontractcreation: (creation as any).json,
   });
 
+  const creationMsg = (creation as any).json?.result;
+  const creationFree = Array.isArray(creationMsg);
+  console.log(
+    `  ${creationFree ? "OK  " : "NOTE"} getcontractcreation: ${
+      creationFree ? "available" : `NOT on free tier — ${String(creationMsg).slice(0, 90)}`
+    }`,
+  );
+
   if (looksOk) ok(`verified source: ${srcRow.ContractName}, compiler ${srcRow.CompilerVersion}`);
   else
     blocked(
