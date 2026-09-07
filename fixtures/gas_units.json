@@ -1,0 +1,52 @@
+{
+  "chain": "bsc-fork",
+  "fork_of": "bsc-dataseed1.bnbchain.org",
+  "measured_at_block": 120493611,
+  "measured_at": "2026-09-07T12:22:24.766266+00:00",
+  "method": "real txs on an Anvil BSC-mainnet fork; receipt.gasUsed",
+  "script": "scripts/measure_gas.py",
+  "ops": {
+    "wrap_bnb": {
+      "gas": 45038,
+      "verified": true
+    },
+    "approve": {
+      "gas": 46364,
+      "verified": true
+    },
+    "swap_v2": {
+      "gas": 118387,
+      "verified": true
+    },
+    "v3_mint": {
+      "gas": null,
+      "verified": false,
+      "note": "measured in T-042 (NonfungiblePositionManager)"
+    },
+    "v3_increase_liquidity": {
+      "gas": null,
+      "verified": false,
+      "note": "measured in T-042"
+    },
+    "v3_decrease_liquidity": {
+      "gas": null,
+      "verified": false,
+      "note": "measured in T-042"
+    },
+    "v3_collect": {
+      "gas": null,
+      "verified": false,
+      "note": "measured in T-042"
+    },
+    "v3_burn": {
+      "gas": null,
+      "verified": false,
+      "note": "measured in T-042"
+    },
+    "venus_repay_borrow": {
+      "gas": null,
+      "verified": false,
+      "note": "measured in T-044"
+    }
+  }
+}

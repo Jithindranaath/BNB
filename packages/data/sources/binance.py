@@ -54,6 +54,14 @@ def _symbol(pair: str) -> str:
     return pair.upper().replace("-", "").replace("_", "").replace("/", "")
 
 
+def spot_price(pair: str = "BNB-USDT") -> float:
+    """Last trade price from /api/v3/ticker/price. No auth."""
+    body = get_json(
+        f"{settings().binance_base_url}/api/v3/ticker/price", params={"symbol": _symbol(pair)}
+    )
+    return float(body["price"])
+
+
 def get_klines(
     pair: str = "BNB-USDT",
     interval: str = "1h",

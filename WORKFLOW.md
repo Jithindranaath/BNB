@@ -157,11 +157,12 @@ Stop and surface it (don't work around it silently) when:
 > Exactly one line. Update it at the OPEN step of every task.
 
 ```
-PHASE:  1 — Data layer
-TASK:   T-012 · Calibration functions
+PHASE:  2 — Harness and receipts
+TASK:   T-020 · Agent base + manifest loader   (also T-021 DB schema — indep.)
 STATE:  TODO (next)
-NEXT:   Phase 2 — T-020 agent base + manifest loader
-NOTE:   subgraph.py still needs a working Graph query API key (two rejected so far)
+NEXT:   T-022 run harness + receipt writer
+NOTE:   subgraph.py needs a working Graph query key (3 rejected — likely Graph
+        billing not activated). gas: v3-NPM/venus units still to measure (T-042/44).
 ```
 
 ---
@@ -257,6 +258,29 @@ NOTE:   subgraph.py still needs a working Graph query API key (two rejected so f
 - Note: "survives container restart" — our cache is on the host fs, so it
   survives process restarts trivially (proved by the cached-only run).
 - Next: **T-012** calibration.
+
+### 2026-09-07 · T-012 calibration · DONE  (Phase 1 complete)
+- 3rd Graph key (`a659…`, same string re-confirmed by user as an API key) still
+  `auth error: API key not found` — verified against a canonical subgraph
+  (Uniswap v3 ETH) too, so it's not the id. Strong guess: The Graph **Billing**
+  not activated (keys read "Active" in the list before that). Parked.
+- **calibrate.py**: `atr` (Wilder), `realized_vol` (log-return stdev × √8760),
+  `fee_apr` (sum feesUSD / mean tvlUSD × 365/n), `il_estimate` (numerical
+  E[IL] of a linear-symmetric bounded v3 range under **drift-free lognormal**
+  price — assumptions in the docstring; wider range → less IL; grows with
+  vol/horizon), `gas_cost_usd` (units × gas price × BNB/USD).
+- **fixtures/klines_bnbusdt_1h.csv** — 361 real BNBUSDT 1h candles
+  (2026-07-01..16), frozen. Tests check each fn vs an independent recompute on it.
+- **scripts/measure_gas.py** — Anvil forks BSC at head via `FORK_RPC_URL`
+  (must be a dataseed; PublicNode 403s archive reads → moved default to
+  `bsc-dataseed1.bnbchain.org`), sends real txs, reads `gasUsed`:
+  wrap_bnb 45038 · approve 46364 · swap_v2 118387 → **fixtures/gas_units.json**
+  (block 120493611). v3-NPM mint/inc/dec/collect/burn + venus repay =>
+  `verified:false`; `gas_cost_usd` raises `GasUnitUnmeasured` for those (R6).
+- Also added `binance.spot_price()`, `web3` PoA middleware in `rpc.web3_client`
+  (BSC extraData) + `settings.fork_rpc_url`.
+- Suite 27 pass / 1 skip, ruff clean. **Gate 1→2: green.**
+- Next: **T-020** (agent base + manifest loader), **T-021** (DB schema) — independent.
 
 ---
 

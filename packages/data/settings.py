@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     # chain
     bsc_rpc_url: str = "https://bsc-rpc.publicnode.com"
     bsc_rpc_url_fallback: str = "https://bsc-dataseed.bnbchain.org"
+    # anvil fork source — must serve recent state to unauthenticated clients
+    # (PublicNode 403s "archive requests" once head moves past the fork block)
+    fork_rpc_url: str = "https://bsc-dataseed1.bnbchain.org"
     bsc_chain_id: int = 56
 
     # external data

@@ -71,7 +71,14 @@ Bring up `hummingbot-api` + `gateway`. Determine whether Gateway can *write* to 
 **Accept:** cold run pulls 30d of 1h klines in <60s; second run hits cache in <2s; parquet survives container restart.
 **Deps:** T-010
 
-### T-012 · Calibration functions · TODO
+### T-012 · Calibration functions · DONE
+> `atr` (Wilder), `realized_vol` (annualised log-return stdev), `fee_apr`,
+> `il_estimate` (numerical E[IL] of a bounded v3 range under drift-free lognormal
+> price; assumptions documented inline), `gas_cost_usd`. Each tested vs an
+> independent computation on a frozen REAL fixture (`fixtures/klines_bnbusdt_1h.csv`).
+> `scripts/measure_gas.py` measured wrap/approve/swap_v2 on an Anvil BSC fork ->
+> `fixtures/gas_units.json` (block 120493611); v3-NPM + venus ops `verified:false`
+> -> `gas_cost_usd` raises `GasUnitUnmeasured` for them (filled in T-042/T-044).
 Implement `spec.md` §2. `gas_cost_usd` must be derived from gas units **measured on the Anvil fork**, written to `fixtures/gas_units.json` with the measurement block. Document the v3 IL formula and its assumptions inline.
 **Accept:** each function tested against a hand-computed value on a fixed kline fixture. No synthetic data anywhere (R3).
 **Deps:** T-011

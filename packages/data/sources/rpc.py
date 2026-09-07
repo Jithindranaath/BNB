@@ -18,6 +18,7 @@ from eth_abi import encode as abi_encode
 from eth_utils import function_signature_to_4byte_selector, to_checksum_address
 from pydantic import BaseModel, ConfigDict
 from web3 import Web3
+from web3.middleware import ExtraDataToPOAMiddleware
 
 from .. import reference
 from ..settings import settings
@@ -28,7 +29,10 @@ _W3_CACHE: dict[str, Web3] = {}
 def web3_client(url: str | None = None) -> Web3:
     url = url or settings().bsc_rpc_url
     if url not in _W3_CACHE:
-        _W3_CACHE[url] = Web3(Web3.HTTPProvider(url, request_kwargs={"timeout": 20}))
+        w3 = Web3(Web3.HTTPProvider(url, request_kwargs={"timeout": 20}))
+        # BSC is PoA: block headers carry an oversized `extraData` field.
+        w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
+        _W3_CACHE[url] = w3
     return _W3_CACHE[url]
 
 
