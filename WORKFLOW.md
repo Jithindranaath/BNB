@@ -157,14 +157,14 @@ Stop and surface it (don't work around it silently) when:
 > Exactly one line. Update it at the OPEN step of every task.
 
 ```
-PHASE:  3 — Tier 0 agents (ship first)
-TASK:   T-030 · Anvil fork simulation harness  (highest value/hour)
+PHASE:  4 — Trading agents   (T-033 pcs-yield HELD for Graph key)
+TASK:   T-040 · bnb-grid Tier 1 (paper)   ** must be RUNNING LIVE by end of day 2 **
 STATE:  TODO (next)
-NEXT:   T-031 bsc-sentry check suite, T-032 test set, T-033 pcs-yield
-NOTE:   subgraph.py needs a working Graph query key (3 rejected — likely Graph
-        billing not activated); pcs-yield (T-033) uses the subgraph — may block.
-        gas: v3-NPM/venus units still to measure (T-042/44).
+NEXT:   T-042 pcs-rebalancer Tier 1, T-044 venus-guard
+NOTE:   T-033 pcs-yield blocked on a working Graph query key (3 rejected).
+        gas: v3-NPM/venus units still to measure (T-042/44 — gas_cost_usd raises).
         DB/redis: 127.0.0.1, never localhost. Long cmds: logfile + Monitor, not `| tail`.
+        Public dataseed rate-limits a shared anvil fork after ~10 tokens -> per-item forks.
 ```
 
 ---
@@ -328,12 +328,17 @@ NOTE:   subgraph.py needs a working Graph query key (3 rejected — likely Graph
   score_report; report() metric = `wall_seconds` vs the manual_analyst baseline.
 - **T-032** `fixtures/security_testset.json` (26 established BSC tokens from the
   PancakeSwap extended list + 2 synthetic bad: HoneypotToken, HighTaxToken).
-  `scripts/run_security_testset.py` runs sentry over it →
-  `fixtures/security_results.json` with precision/recall/FPR/**n**. n is a
-  demonstrator (~28, not the ~300 the spec wants) — the harness scales; add real
-  rug addresses to `["bad"]` and re-run.
+  `scripts/run_security_testset.py` (fresh fork per token — a shared fork gets
+  rate-limited by the public dataseed after ~10) →
+  **`fixtures/security_results.json`: n=28, precision 1.0, recall 1.0, FPR 0.0,
+  confusion {tp:2, fn:0, fp:0, tn:26}**. All 26 blue-chips OK/WARN (bridge-peg
+  tokens land WARN — correct, they have a centralised mint); both synthetic bad
+  CRITICAL via the right hard-fail. n is a demonstrator (spec asks ~300) — add
+  real rug addresses to `["bad"]` and re-run.
 - **T-033 held** for a working Graph query key.
-- Suite non-live 41 pass; live sentry/fork tests 11 pass.
+- Suite non-live 41 pass; live sentry/fork tests 11 pass. ruff clean.
+- Next: **Phase 4 — T-040 bnb-grid Tier 1 paper**, which must be running live by
+  end of day 2 (window length isn't purchasable later).
 
 ### 2026-09-07 · T-022 + T-023 + T-024 · DONE  (Gate 2 green)
 - **agents/base.py:** `canonical_hash(obj)` — the one hashing rule (snapshot /
