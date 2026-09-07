@@ -39,6 +39,9 @@ pythonpath = [".", "packages", "services"]
 testpaths = ["tests", "packages", "services"]
 python_files = ["test_*.py", "*_test.py"]
 asyncio_mode = "auto"
+markers = [
+    "live: hits a real external API / RPC over the network (deselect with -m 'not live')",
+]
 
 [tool.ruff]
 line-length = 100

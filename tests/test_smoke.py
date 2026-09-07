@@ -28,8 +28,8 @@ def test_data_package_imports():
 
 
 def test_orchestrator_and_agent_base_import():
-    from agents.base import Agent, ExecContext, TierViolation
     import pytest
+    from agents.base import Agent, ExecContext, TierViolation
 
     # Tier 0/1 contexts must refuse to sign (architecture.md §10; full test in T-024).
     ctx = ExecContext(tier=0)

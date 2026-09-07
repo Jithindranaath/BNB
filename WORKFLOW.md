@@ -157,11 +157,11 @@ Stop and surface it (don't work around it silently) when:
 > Exactly one line. Update it at the OPEN step of every task.
 
 ```
-PHASE:  0 — Ground truth  (COMPLETE — Gate 0→1 review pending)
-TASK:   T-002, T-003, T-004 all DONE
-STATE:  Phase 0 done except two key-gated re-runs (subgraph, bscscan)
-NEXT:   Phase 1 — T-010 source clients (binance/rpc/venus/llama unblocked now;
-        subgraph.py + bscscan.py wait on GRAPH_API_KEY / BSCSCAN_API_KEY)
+PHASE:  1 — Data layer
+TASK:   T-011 · Cache + CLI
+STATE:  TODO (next)
+NEXT:   T-012 calibration functions
+NOTE:   subgraph.py still needs a Graph *query* API key (deploy key was supplied)
 ```
 
 ---
@@ -219,6 +219,23 @@ NEXT:   Phase 1 — T-010 source clients (binance/rpc/venus/llama unblocked now;
 - Blunt-kill note from last entry still stands; not repeated this session.
 - Key-gated re-runs outstanding: `probe/pcs_subgraph.ts`, `probe/bscscan_source.ts`.
 - Next: **Gate 0→1 review**, then Phase 1 T-010.
+
+### 2026-09-07 · T-003 keys + T-010 source clients · DONE
+- User supplied keys: BscScan works; the Graph value was a **deploy key**, not a
+  query key → subgraph still blocked (`auth error: API key not found`). BscScan
+  `getcontractcreation` is not on the free tier for BSC (T-031 to work around).
+  `.env` (gitignored) holds both; `scripts/_env.ts` (dotenv) loads it for all scripts.
+- **T-010:** `settings.py`, `reference/__init__.py` (R1-enforcing), `sources/_http.py`
+  (tenacity retry 5xx/429 only + TokenBucket). Clients: `binance.get_klines`,
+  `llama.get_pools/get_pool_chart`, `bscscan.get_contract_source`,
+  `rpc.multicall`/`erc20_metadata`/`pancake_v3_pool_state` (Multicall3 aggregate3,
+  dual-provider), `venus.get_all_markets`/`get_account_liquidity`/`get_vtoken_snapshot`.
+  `subgraph.get_pool`/`get_pool_day_datas` written, auto-skips until a query key.
+- `tests/test_sources_live.py` (`pytest -m live`): 7 pass / 1 skip. Full suite
+  11 pass / 1 skip. ruff clean.
+- Bugs caught: PCS v3 `slot0().feeProtocol` is uint32 not uint8; retry must not
+  catch 4xx; multicall retries only the eth_call across providers, not the decode.
+- Next: **T-011** cache + CLI.
 
 ---
 

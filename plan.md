@@ -50,7 +50,13 @@ Bring up `hummingbot-api` + `gateway`. Determine whether Gateway can *write* to 
 
 ## Phase 1 — Data layer (everything blocks on this)
 
-### T-010 · Source clients · TODO
+### T-010 · Source clients · DONE
+> `binance` `llama` `rpc` `venus` `bscscan` — live tests pass (`pytest -m live`,
+> 7 pass / 1 skip). `subgraph.py` written; its live test auto-skips until a real
+> Graph **query** key lands (deploy key was supplied — docs/findings/T-003.md).
+> rpc.py: all batch reads via Multicall3 `aggregate3`, dual-provider fallback,
+> explicit `Call(sig, args, out-types)` (no hidden ABI). Found: PCS v3 `slot0()`
+> `feeProtocol` is uint32, not uint8.
 `packages/data/sources/`: `binance.py`, `subgraph.py`, `rpc.py`, `venus.py`, `llama.py`, `bscscan.py`. Typed returns (Pydantic). Retry with backoff. BscScan token-bucketed at 4 req/s. RPC uses multicall3 for any batch read — never loop single calls.
 **Accept:** unit test per source hitting the live API and asserting a non-empty typed result.
 **Deps:** T-003
