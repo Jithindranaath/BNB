@@ -57,6 +57,7 @@ packages = [
     "data.sources",
     "data.reference",
     "agents",
+    "agents._echo",
     "agents.pcs_rebalancer",
     "agents.bnb_grid",
     "agents.pcs_yield",

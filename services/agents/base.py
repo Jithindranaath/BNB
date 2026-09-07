@@ -1,15 +1,27 @@
 """Agent ABC — every agent implements exactly this (architecture.md §8).
 
-This is the scaffold skeleton. T-020 fleshes out the dataclasses, the manifest
-model, and the registry. The shape below is fixed by architecture.md §8 and must
-not drift.
+The shape here is fixed by architecture.md §8 and must not drift. The manifest
+model lives in `agents.manifest`; the loader/registry in `agents.registry`.
 """
 
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
+
+from .manifest import Manifest
+
+__all__ = [
+    "Actions",
+    "Agent",
+    "Decision",
+    "ExecContext",
+    "Manifest",
+    "Observation",
+    "Result",
+    "TierViolation",
+]
 
 
 @dataclass(frozen=True)
@@ -58,7 +70,7 @@ class ExecContext:
     construction, not convention (architecture.md §10)."""
 
     tier: int
-    signer: Optional[Any] = None
+    signer: Any | None = None
 
     def require_signer(self) -> Any:
         if self.tier < 2 or self.signer is None:
@@ -69,7 +81,7 @@ class ExecContext:
 class Agent(ABC):
     """See architecture.md §8. Implemented per-agent from Phase 3 onward."""
 
-    manifest: Any  # Manifest model, loaded from manifest.yaml (T-020)
+    manifest: Manifest  # loaded + validated from manifest.yaml by agents.registry
 
     @abstractmethod
     def observe(self, inputs: dict) -> Observation:

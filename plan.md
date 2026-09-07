@@ -87,12 +87,12 @@ Implement `spec.md` §2. `gas_cost_usd` must be derived from gas units **measure
 
 ## Phase 2 — Harness and receipts (the scoring primitive)
 
-### T-020 · Agent base + manifest loader · TODO
+### T-020 · Agent base + manifest loader · WIP
 `services/agents/base.py` per `architecture.md` §8. `registry.py` loads and Pydantic-validates every `manifest.yaml`; an invalid manifest makes the agent unavailable rather than partially rendered.
 **Accept:** a no-op `EchoAgent` implements the ABC and loads.
 **Deps:** T-001
 
-### T-021 · DB schema + migrations · TODO
+### T-021 · DB schema + migrations · WIP
 Implement `architecture.md` §7 exactly. Alembic migration. `agent_stats` as a materialised view refreshed every 60s.
 **Accept:** migration runs clean on an empty DB; hypertable created.
 **Deps:** T-001

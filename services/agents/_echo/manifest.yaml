@@ -1,0 +1,13 @@
+# Hidden test agent (dir starts with '_' -> not in the marketplace). Exists to
+# exercise the run harness + receipt writer (T-022) with no real data or I/O.
+id: _echo
+name: Echo (test harness)
+category: security
+one_liner: No-op agent that echoes its input; used to test the harness and receipts.
+tiers: [0]
+inputs:
+  n: { type: number, required: true, min: 0, max: 1000000 }
+data_deps: []
+baseline: manual_analyst
+advantage_metric: { name: echo_value, unit: count, higher_is_better: true }
+pricing: { model: free }
