@@ -62,3 +62,10 @@ def subgraph(name: str, *, require_verified: bool = True) -> dict:
 def abi(name: str) -> list:
     """Load reference/abis/<name>.json."""
     return json.loads((_DIR / "abis" / f"{name}.json").read_text())
+
+
+@lru_cache
+def venus_params() -> dict:
+    """Venus Core Pool params not exposed by the (Diamond) Comptroller.
+    `liquidation_incentive` is verified:false — flagged, not hidden (R6)."""
+    return _load("venus_params.json")

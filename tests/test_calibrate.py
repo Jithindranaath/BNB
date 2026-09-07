@@ -124,16 +124,15 @@ def test_gas_cost_usd_arithmetic():
     assert math.isclose(got, 118387 * 1e9 * 600 / 1e18, rel_tol=1e-12)
 
 
-def test_gas_cost_usd_raises_for_unmeasured():
-    # venus_repay_borrow is still verified:false (measured in T-044)
-    with pytest.raises(calibrate.GasUnitUnmeasured):
-        calibrate.gas_cost_usd("venus_repay_borrow")
+def test_gas_cost_usd_raises_for_unknown_op():
     with pytest.raises(calibrate.GasUnitUnmeasured):
         calibrate.gas_cost_usd("does_not_exist")
 
 
-def test_gas_cost_usd_v3_ops_now_measured():
-    for op in ("v3_mint", "v3_decrease_liquidity", "v3_collect", "v3_burn"):
+def test_gas_cost_usd_all_ops_measured():
+    # T-043 measured the v3 ops, T-044 measured venus_repay_borrow
+    for op in ("wrap_bnb", "approve", "swap_v2", "v3_mint", "v3_increase_liquidity",
+               "v3_decrease_liquidity", "v3_collect", "v3_burn", "venus_repay_borrow"):
         assert calibrate.gas_cost_usd(op, gas_price_wei=1_000_000_000, bnb_usd=600) > 0
 
 

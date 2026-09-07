@@ -39,11 +39,12 @@
       "verified": true
     },
     "venus_repay_borrow": {
-      "gas": null,
-      "verified": false,
-      "note": "measured in T-044"
+      "gas": 205180,
+      "verified": true
     }
   },
   "v3_measured_at_block": 120503023,
-  "v3_measured_at": "2026-09-07T13:33:13.244650+00:00"
+  "v3_measured_at": "2026-09-07T13:33:13.244650+00:00",
+  "venus_measured_at_block": 120506561,
+  "venus_measured_at": "2026-09-07T14:00:00.785765+00:00"
 }

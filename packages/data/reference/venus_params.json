@@ -1,0 +1,8 @@
+{
+  "_note": "Venus Core Pool parameters that are NOT exposed by the current Comptroller. The Comptroller is an EIP-2535 Diamond and `liquidationIncentiveMantissa()` reverts 'Diamond: Function does not exist' (T-003 finding). close_factor IS readable on-chain (closeFactorMantissa() -> 5e17) and is fetched live; only the liquidation incentive is pinned here.",
+  "liquidation_incentive_mantissa": 1100000000000000000,
+  "liquidation_incentive": 1.10,
+  "verified": false,
+  "source": "https://docs.venus.io/technical-reference/reference-core-pool/comptroller — Venus Core Pool liquidation incentive is 1.1 (10% bonus).",
+  "confirm_by": "recompute it from a real vToken LiquidateBorrow event: seizeTokens * exchangeRate * collateralPrice / (repayAmount * repayPrice) ~= liquidation_incentive. TODO in a follow-up probe."
+}

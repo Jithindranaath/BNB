@@ -308,6 +308,34 @@ NOTE:   T-033 pcs-yield blocked on a working Graph query key (3 rejected).
   logfile + Monitor for long commands, not `... | tail`.
 - Suite 35 pass / 1 skip, ruff clean. **Gate 2 in progress** (T-022–024 next).
 
+### 2026-09-07 · T-044 venus-guard · DONE  (the dramatic receipt)
+- `venus.account_health(account)` — real on-chain HF: per-market `balanceOf x
+  exchangeRateStored` (supply), `borrowBalanceStored` (borrow), `markets().cf`,
+  Venus Resilient Oracle `getUnderlyingPrice`. **Cross-checks to the cent**
+  against `Comptroller.getAccountLiquidity` (`adj - borrow == liquidity`).
+- `health.vol_scaled_trigger(vol)` = `1 + z*sigma*sqrt(response_hrs/8760)` (§7.2).
+- `replay.py` (pure): `replay_no_action` — HF<1 ⇒ liquidator repays
+  `close_factor x borrow`, user eats `repay x (incentive-1)`. `replay_guarded` —
+  smallest repays from the pre-approved buffer to restore `recovery_hf`.
+  `usd_saved = penalty_avoided - repay_gas`.
+- `agent.VenusGuardAgent` — dominant collateral ⇒ 365d real 1h price history ⇒
+  the **worst peak-to-trough drawdown path**; ALERT string every run (§7.3);
+  Tier 2 `repayBorrowBehalf` stub (needs a scoped key). `_STABLE_VSYMBOLS`
+  split, `_VSYMBOL_TO_BINANCE` map.
+- Real account `0x222170d4eb3987506a0453ea21e83274743eca14` (found via vUSDT
+  RepayBorrow events): HF 1.34; under ETH's worst real 365d drawdown (to 73.4%
+  of peak) HF hits **0.995 ⇒ liquidated, −$156.11**; the guard's 16 buffer
+  repays ($1,847) **prevent it ⇒ +$155.99**, delta **+$312** vs no_action.
+- `scripts/measure_venus_gas.py` (supply→enter→borrow→repay on a fork) ⇒
+  `venus_repay_borrow` 205,180. **All 9 gas units now verified:true.**
+- `reference/venus_params.json` — `liquidation_incentive` 1.1, `verified:false`
+  (the Diamond Comptroller doesn't expose `liquidationIncentiveMantissa()`;
+  source cited, reconcile against a real LiquidateBorrow event later).
+- `baseline_static_range` got a `fee_apr` short-circuit earlier; `no_action`
+  baseline already took `min_hf` + `liquidation_loss_usd` — no change needed.
+- Suite **89 pass / 1 skip**. ruff clean. No continuous runner (spec's "poll
+  every 30s" — a light loop could be added; the receipt is the artifact).
+
 ### 2026-09-07 · T-042 + T-043 pcs-rebalancer · WIP (T-042 deployable, T-043 fork-proven)
 - **T-042** `pcs_rebalancer/range.py` `select_range()` (§6.1: `m(risk)*vol*sqrt(h/365)`
   half-width, `exp(±hw)` bounds, snap to tick spacing). `economics.py`
