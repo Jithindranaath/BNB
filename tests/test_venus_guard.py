@@ -7,8 +7,7 @@ from __future__ import annotations
 import pytest
 from agents.venus_guard.health import vol_scaled_trigger
 from agents.venus_guard.replay import Position, replay_guarded, replay_no_action
-from orchestrator import db, harness
-from sqlalchemy import text
+from orchestrator import harness
 
 # A real BSC Venus borrower (found via vUSDT RepayBorrow events): ETH/BTC/BNB
 # collateral, ~$3.1k USDT borrow, HF ~1.3.
@@ -98,20 +97,8 @@ def test_real_account_liquidates_under_a_severe_decline():
     assert r.liquidated is True and r.liquidation_loss_usd > 0
 
 
-@pytest.fixture
-def _clean_vg():
-    def _wipe():
-        with db.session() as s:
-            s.execute(text("DELETE FROM receipts WHERE agent_run_id IN "
-                           "(SELECT id FROM runs WHERE agent_id='venus-guard')"))
-            s.execute(text("DELETE FROM runs WHERE agent_id='venus-guard'"))
-            s.execute(text("DELETE FROM agent_stats WHERE agent_id='venus-guard'"))
-            s.commit()
-    _wipe(); yield; _wipe()
-
-
 @pytest.mark.live
-def test_venus_guard_hire_vs_no_action(_clean_vg):
+def test_venus_guard_hire_vs_no_action():
     from agents.venus_guard.agent import NotAtRisk, VenusGuardAgent
     try:
         agent = VenusGuardAgent()
@@ -119,11 +106,12 @@ def test_venus_guard_hire_vs_no_action(_clean_vg):
             agent, tier=1,
             raw_inputs={"account": REAL_ACCOUNT, "trigger_hf": 1.1,
                         "buffer_token": "USDT", "buffer_amount": 3000},
+            persist=False,
         )
     except NotAtRisk as e:
         pytest.skip(f"account no longer at risk: {e}")
 
-    assert out.persisted and out.receipt_id
+    assert out.persisted is False and out.merkle_leaf
     assert out.agent_run.result.metric == "usd_saved"
     assert out.baseline_run.result.metric == "usd_saved"
     o = out.agent_run.result.outputs

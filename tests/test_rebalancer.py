@@ -12,8 +12,7 @@ import pytest
 from agents.pcs_rebalancer.economics import rebalance_decision
 from agents.pcs_rebalancer.range import FEE_TIER_SPACING, select_range
 from agents.pcs_rebalancer.sim import simulate_rebalancer
-from orchestrator import db, harness
-from sqlalchemy import text
+from orchestrator import harness
 
 FIXT = Path(__file__).resolve().parents[1] / "fixtures" / "klines_bnbusdt_1h.csv"
 # WBNB/USDT 0.05% v3 pool (from PancakeV3Factory.getPool, verified earlier)
@@ -89,31 +88,20 @@ def test_sim_declines_to_rebalance_in_a_thin_pool(klines):
 
 # --- end to end --------------------------------------------
 
-@pytest.fixture
-def _clean_reb():
-    def _wipe():
-        with db.session() as s:
-            s.execute(text("DELETE FROM receipts WHERE agent_run_id IN "
-                           "(SELECT id FROM runs WHERE agent_id='pcs-rebalancer')"))
-            s.execute(text("DELETE FROM runs WHERE agent_id='pcs-rebalancer'"))
-            s.execute(text("DELETE FROM agent_stats WHERE agent_id='pcs-rebalancer'"))
-            s.commit()
-    _wipe(); yield; _wipe()
-
-
 @pytest.mark.live
-def test_rebalancer_paper_hire_vs_static_range(_clean_reb):
+def test_rebalancer_paper_hire_vs_static_range():
     from agents.pcs_rebalancer.agent import PcsRebalancerAgent, UnsupportedPool
     try:
         agent = PcsRebalancerAgent(default_window_days=10)
         out = harness.run_hire(
             agent, tier=1,
             raw_inputs={"pool": POOL, "capital_usd": 5000, "risk": "balanced"},
+            persist=False,  # don't disturb the running deployment's receipts
         )
     except UnsupportedPool as e:
         pytest.skip(f"DefiLlama has no fee data for the pool: {e}")
 
-    assert out.persisted and out.receipt_id
+    assert out.persisted is False and out.merkle_leaf
     assert out.agent_run.result.metric == "net_fees_usd"
     assert out.baseline_run.result.metric == "net_fees_usd"
 

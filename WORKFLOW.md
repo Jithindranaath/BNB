@@ -333,7 +333,13 @@ NOTE:   T-033 pcs-yield blocked on a working Graph query key (3 rejected).
   source cited, reconcile against a real LiquidateBorrow event later).
 - `baseline_static_range` got a `fee_apr` short-circuit earlier; `no_action`
   baseline already took `min_hf` + `liquidation_loss_usd` — no change needed.
-- Suite **89 pass / 1 skip**. ruff clean. No continuous runner (spec's "poll
+- Suite **89 pass / 1 skip**. ruff clean.
+- FIX: the deployed-agent e2e tests (grid/rebalancer/venus) now `persist=False`
+  so the running paper loops keep their receipt history. `test_db_migration`
+  still rebuilds the schema on a full `pytest -m live` run — do not run the
+  full live suite while a deployment is accumulating its 22656h track
+  (the `var/*.json` state survives regardless; only DB rows are at risk).
+- No venus continuous runner (spec's "poll
   every 30s" — a light loop could be added; the receipt is the artifact).
 
 ### 2026-09-07 · T-042 + T-043 pcs-rebalancer · WIP (T-042 deployable, T-043 fork-proven)

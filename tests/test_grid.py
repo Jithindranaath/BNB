@@ -11,8 +11,7 @@ import pytest
 from agents.bnb_grid.agent import BnbGridAgent
 from agents.bnb_grid.grid import calibrate_grid
 from agents.bnb_grid.sim import simulate
-from orchestrator import db, harness
-from sqlalchemy import text
+from orchestrator import harness
 
 FIXT = Path(__file__).resolve().parents[1] / "fixtures" / "klines_bnbusdt_1h.csv"
 
@@ -89,26 +88,16 @@ def test_circuit_breaker_halts_on_max_loss(klines):
 
 # --- end to end ---------------------------------------------------
 
-@pytest.fixture
-def _clean_grid():
-    def _wipe():
-        with db.session() as s:
-            s.execute(text("DELETE FROM receipts WHERE agent_run_id IN "
-                           "(SELECT id FROM runs WHERE agent_id='bnb-grid')"))
-            s.execute(text("DELETE FROM runs WHERE agent_id='bnb-grid'"))
-            s.execute(text("DELETE FROM agent_stats WHERE agent_id='bnb-grid'"))
-            s.commit()
-    _wipe(); yield; _wipe()
-
-
 @pytest.mark.live
-def test_grid_paper_hire_produces_receipt_vs_hodl(_clean_grid):
+def test_grid_paper_hire_produces_receipt_vs_hodl():
+    # persist=False so the running bnb-grid deployment's receipt history is untouched
     agent = BnbGridAgent(default_window_days=10)
     out = harness.run_hire(
         agent, tier=1,
         raw_inputs={"pair": "BNB-USDT", "capital_usd": 1000, "grid_levels": 12, "risk": "balanced"},
+        persist=False,
     )
-    assert out.persisted and out.receipt_id
+    assert out.persisted is False and out.merkle_leaf
     assert out.agent_run.result.metric == "net_pnl_usd"
     assert out.baseline_run.result.metric == "net_pnl_usd"  # hodl, same unit
 
