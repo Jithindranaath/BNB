@@ -30,7 +30,8 @@ pytest
 cd apps/web && npm install && npm run dev     # http://localhost:3000
 
 # 5. orchestrator
-uvicorn orchestrator.main:app --reload --port 8080 --app-dir services
+uvicorn orchestrator.main:app --reload --port 8088 --app-dir services
+# port 8088 — the web app's NEXT_PUBLIC_ORCHESTRATOR_URL defaults to :8088
 
 # 6. contracts
 cd contracts && forge test
