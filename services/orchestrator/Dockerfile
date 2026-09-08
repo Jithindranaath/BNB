@@ -28,6 +28,11 @@ COPY services/ services/
 COPY migrations/ migrations/
 COPY alembic.ini ./
 
+# Runtime fixtures resolved at Path(__file__).parents[2]/"fixtures" == /app/fixtures:
+#   gas_units.json     — MEASURED gas units; gas_cost_usd() (grid/rebalancer/yield/venus-guard)
+#   manual_baselines.json — the bsc-sentry manual_analyst baseline
+COPY fixtures/ fixtures/
+
 # Editable install keeps the reference JSON / manifest.yaml files resolvable in
 # place via Path(__file__) — same as local dev.
 RUN pip install --upgrade pip && pip install -e .

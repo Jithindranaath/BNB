@@ -33,6 +33,11 @@ services:
           property: connectionString
       - key: CORS_ALLOW_ORIGINS
         sync: false            # set to your Vercel origin, e.g. https://proofstand.vercel.app
+      - key: BINANCE_BASE_URL
+        # Binance geoblocks api.binance.com (HTTP 451) from many datacentre IPs
+        # incl. Render's. data-api.binance.vision is the public market-data host:
+        # same /api/v3/klines + /api/v3/ticker/price, no auth, not geofenced.
+        value: https://data-api.binance.vision
       - key: BSC_RPC_URL
         value: https://bsc-rpc.publicnode.com
       - key: BSC_RPC_URL_FALLBACK
