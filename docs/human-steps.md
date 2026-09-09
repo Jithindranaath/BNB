@@ -20,11 +20,10 @@ Ran against the live API. Real receipt: agent 4.57s vs the 54s human baseline,
 **delta -49.4s, favorable**. All 5/5 agents now have both-ways receipts;
 `docs/acceptance.md` #5 moved to PASS.
 
-## 3. A3 · Confirm CORS is pinned — 1 min, Render dashboard
+## 3. A3 · Confirm CORS is pinned — DONE
 
-`CORS_ALLOW_ORIGINS` = your Vercel origin (e.g.
-`https://proofstand.vercel.app`). Until set, the API allows `*` — the site
-still works, but pin it before demo day.
+`CORS_ALLOW_ORIGINS` confirmed set to the live Vercel origin. Step 1 (deploy +
+seed) is now fully done.
 
 ---
 
@@ -96,6 +95,6 @@ fork — dry-run it well before the demo, not during.
 
 ## Suggested order
 
-- **A1 and A2 are done.** Next: A3, then kick off B overnight.
+- **A1, A2, A3 are all done.** Next: kick off B overnight.
 - **Tomorrow:** C (rehearsal + phone check) once B has run.
 - **If time allows:** D1, then D2.
