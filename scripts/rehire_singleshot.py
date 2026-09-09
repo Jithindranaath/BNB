@@ -1,12 +1,16 @@
-"""Re-hire the single-shot agents (venus-guard, pcs-yield) a few times so their
-receipt curves have more than n=1 (plan.md B / T-072 follow-up).
+"""Re-hire the single-shot agents (venus-guard, pcs-yield, bsc-sentry) a few
+times so their receipt curves have more than n=1 (plan.md B / T-072 follow-up).
 
-Unlike bnb-grid / pcs-rebalancer, these two have no continuous paper loop — each
-hire is one independent both-ways run against live data, persisted straight to
-the DB via the harness (same path `POST /hires` uses, no HTTP round trip needed).
-Real inputs only (R2): venus-guard's account is the same on-chain address already
-verified live in tests/test_venus_guard.py; pcs-yield's capital/risk match
-tests/test_pcs_yield.py. Nothing here is estimated or synthetic.
+Unlike bnb-grid / pcs-rebalancer, these three have no continuous paper loop —
+each hire is one independent both-ways run against live data, persisted
+straight to the DB via the harness (same path `POST /hires` uses, no HTTP
+round trip needed). Real inputs only (R2): venus-guard's account is the same
+on-chain address already verified live in tests/test_venus_guard.py;
+pcs-yield's capital/risk match tests/test_pcs_yield.py; bsc-sentry's target is
+the CAKE address with the real T-072 manual_analyst row. Repeated bsc-sentry
+runs are legitimate additional data points — the agent's wall-clock time
+varies run to run against live RPC/anvil, same underlying baseline. Nothing
+here is estimated or synthetic.
 
     export DATABASE_URL="<the Render/Neon postgres URL>"
     python scripts/rehire_singleshot.py --count 8 --interval 900
@@ -36,10 +40,12 @@ VENUS_GUARD_INPUTS = {
     "buffer_amount": 3000,
 }
 PCS_YIELD_INPUTS = {"capital_usd": 5000, "risk": "balanced", "horizon_days": 30}
+BSC_SENTRY_INPUTS = {"target": "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82"}  # CAKE, T-072
 
 JOBS = {
     "venus-guard": (1, VENUS_GUARD_INPUTS),
     "pcs-yield": (0, PCS_YIELD_INPUTS),
+    "bsc-sentry": (0, BSC_SENTRY_INPUTS),
 }
 
 

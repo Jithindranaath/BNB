@@ -152,14 +152,28 @@ What's still open — not blocked, just not walked yet:
 
 ## 8. Receipt batch anchored on BSC + client-side proof — PARTIAL
 
-Full flow proven against a local Anvil chain:
+Full flow proven against a local Anvil chain, and now run against the **live**
+DB (2026-09-09) — all 20 receipts on the deployed site batched and anchored:
 
 ```
-$ python scripts/anchor_receipts.py
-deployed ReceiptAnchor -> 0x… (local anvil)
-anchored: tx … block 6
+$ python scripts/anchor_receipts.py --min-size 1     # DATABASE_URL = live Render/Neon
+batch 19870816-...: 20 receipts, root 0xa86aaf60...
+deployed ReceiptAnchor -> 0x5FbDB2315678afecb367f032d93F642f64180aa3 (local anvil; no mainnet key set)
+anchored: tx 374d4726... block 2
 event root == batch root: OK   proof verifies: True
 ```
+
+Confirmed via the live API — `GET /receipts/{id}` now returns a populated
+`merkle_proof` array and `anchor_root`, so `components/MerkleVerifier.tsx`
+renders the green checkmark instead of "verifier idle — batch this receipt
+first". **This was previously a silent demo-breaking gap**: 0/20 live receipts
+were anchored before this run, which would have failed demo beat #4
+(`docs/demo.md`) for every receipt.
+
+**Re-run this before the actual demo.** The paper-loop and rehire jobs keep
+producing new receipts after this batch, which start out unbatched again —
+`python scripts/anchor_receipts.py` right before going on stage (per
+`docs/demo.md`'s pre-demo checklist step 3) picks up everything new.
 
 `scripts/anchor_receipts.py` deploys `ReceiptAnchor.sol`, batches leaves, calls
 `anchor(batchId, root, count)`, reads back the `BatchAnchored` event, and
