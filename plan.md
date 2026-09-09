@@ -9,20 +9,27 @@ Status values: `TODO` · `WIP` · `DONE` · `BLOCKED(reason)`
 
 ---
 
-## Status (2026-09-08)
+## Status (2026-09-09)
 
-All 5 agents built; front end, orchestrator API, anchor, and Agent Advantage
-Report done; deploy artifacts done. **DONE:** T-001–T-004, T-010–T-012,
-T-020–T-024, T-030–T-033, T-040, T-042, T-043, T-044, T-050–T-054, T-060, T-061,
-T-063, T-071, T-072. **WIP:** T-062 (anvil-proven; BSC-mainnet anchor pending a
-funded key), T-070 (artifacts done + locally proven; hosted deploy needs the
-user's GitHub/Render/Vercel accounts). **TODO:** T-041 (grid Tier-2 live —
-pending real funds).
+All 5 agents built and all 5 have real both-ways receipts; front end,
+orchestrator API, anchor, and Agent Advantage Report done; hosted deploy is
+live. **DONE:** T-001–T-004, T-010–T-012, T-020–T-024, T-030–T-033, T-040,
+T-042, T-043, T-044, T-050–T-054, T-060, T-061, T-063, T-070, T-071, T-072.
+**WIP:** T-062 (anvil-proven; BSC-mainnet anchor pending a funded key).
+**TODO:** T-041 (grid Tier-2 live — pending real funds).
 
-Open items are all external: funded keys (T-041, T-062), the hosted deploy
-(T-070), a human `manual_analyst` CAKE audit row (unblocks acceptance #5→5/5 +
-#6 + the sentry demo beat), and deploying the Envio HyperIndex PCS v3 indexer
-(`docs/envio-indexer.md`) so pcs-yield ranks v3 pools instead of v2.
+T-070 went live 2026-09-09 at `https://proofstand-orchestrator.onrender.com`;
+`/healthz` verified against the public URL. The CAKE `manual_analyst` row
+landed the same day (`fixtures/manual_baselines.json`, 54s measured) — this
+also surfaced a real bug in `BscSentryAgent.observe()` (never wrote `inputs`
+into `Observation.data`, so the baseline lookup couldn't resolve any target),
+now fixed. `bsc-sentry` has a live receipt: agent 4.57s vs the 54s baseline,
+-49.4s delta, favorable. `docs/acceptance.md` #5 and #10 moved to PASS.
+
+Remaining open items are all external: funded keys (T-041, T-062), deploying
+the Envio HyperIndex PCS v3 indexer (`docs/envio-indexer.md`) so pcs-yield
+ranks v3 pools instead of v2, and the cold-browser/cold-phone demo rehearsal
+(T-072's remaining leg — see `docs/human-steps.md`).
 
 ---
 
@@ -298,7 +305,7 @@ Rehearse the 90-second path cold, three times: land → sentry (no wallet) → y
   - Fixed (B) at the time with `agents_factory.IMPLEMENTED` + `AgentCard.available` / `unavailable_reason` (Yield tile + card still render, agent page hides Hire, `POST /hires` → **409** with reason). **T-033 then built pcs-yield**, so all 5 agents are now `available` and hireable; the machinery stays for any future manifest-only agent (`tests/test_api.py::test_all_five_agents_available`).
   - For (A): `docs/demo.md` routes the live demo to **venus-guard** (the dramatic receipt, completes every time) instead of the sentry CTA, and lists the sentry-baseline fix as pre-demo task #1. `docs/findings/T-072-cake-audit.md` has the CAKE audit findings gathered so a human can record a real (measured) baseline in ~2 min.
   - Anchored the 11 seeded receipts as one batch on the local anvil (`submit_batch`, tx `3c2f6d63…`), so every `/receipt/{id}` page now shows a real merkle proof + anchor root + tx and the browser verifier recomputes green. Mainnet anchor still pending funds (T-062).
-**Remaining (user):** run the 3 cold browser stopwatch passes per `docs/demo.md`; record the human `manual_analyst` CAKE row.
+**Remaining (user):** run the 3 cold browser stopwatch passes per `docs/demo.md` against the now-live URL. T-070 (hosted deploy) and the CAKE `manual_analyst` row both landed 2026-09-09 — see `docs/human-steps.md`.
 
 ---
 
@@ -306,12 +313,10 @@ Rehearse the 90-second path cold, three times: land → sentry (no wallet) → y
 
 | Item | What | Blocker |
 |---|---|---|
-| T-070 | Hosted deploy: GitHub push → Render Blueprint → Vercel import → wire the two URLs → phone acceptance check (`docs/deploy.md`) | user's GitHub / Render / Vercel accounts |
 | T-041 | `bnb-grid` Tier 2 live (+ T-043 mainnet position, T-062 mainnet anchor) | `SESSION_KEY_PRIVATE_KEY` / `ANCHOR_PRIVATE_KEY` + BNB for gas |
-| acceptance #5→5/5, #6, demo beat | one real human `manual_analyst` CAKE audit row in `fixtures/manual_baselines.json` (legwork in `docs/findings/T-072-cake-audit.md`) | a human with a stopwatch |
 | pcs-yield v3 | deploy the Envio HyperIndex PCS v3 BSC indexer (`docs/envio-indexer.md`), set `PCS_V3_GRAPHQL_URL` → ranks v3 pools instead of v2 | Envio deploy + first sync |
-| T-040 continuous run | `python scripts/run_paper_loops.py --interval 600` in a real terminal for the ≥6h window | OOM reaper kills harness-managed background processes |
-| T-072 | 3 cold-browser stopwatch passes, fill the rehearsal-log table | a person |
+| receipt depth | `run_paper_loops.py` overnight + `rehire_singleshot.py` so curves show 5-15 points, not n=1 | a real terminal (`docs/human-steps.md` step B) |
+| T-072 rehearsal | 3 cold-browser + 1 cold-phone stopwatch pass against the live URL, fill the rehearsal-log table | a person + phone + stopwatch (`docs/human-steps.md` step C) |
 
 ## Original day mapping (kept for reference)
 

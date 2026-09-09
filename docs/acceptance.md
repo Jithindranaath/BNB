@@ -1,8 +1,10 @@
 # Acceptance pass — spec.md §11 (T-071)
 
-Walked 2026-09-07; #5 and #33-related items refreshed 2026-09-08. Each item
-verified by running the command / test named, not from memory. A partial is
-recorded as a partial — the exact blocker is stated.
+Walked 2026-09-07; #5 and #33-related items refreshed 2026-09-08; #5, #6, #10
+refreshed again 2026-09-09 after T-070 (hosted deploy) and T-072 (CAKE
+manual-analyst row) landed. Each item verified by running the command / test
+named, not from memory. A partial is recorded as a partial — the exact blocker
+is stated.
 
 | # | Criterion | Result |
 |---|---|---|
@@ -10,25 +12,23 @@ recorded as a partial — the exact blocker is stated.
 | 2 | `verify_reference.ts` passes; every address `verified: true` + source | **PASS** |
 | 3 | A test proves `decide()` is pure | **PASS** |
 | 4 | A test proves Tier 0/1 cannot sign | **PASS** |
-| 5 | All five agents complete a run + receipt with a baseline | **PARTIAL — 4/5** |
-| 6 | Stranger reaches a real `bsc-sentry` result from `/`, no wallet, < 2 min | **PARTIAL** |
+| 5 | All five agents complete a run + receipt with a baseline | **PASS — 5/5** |
+| 6 | Stranger reaches a real `bsc-sentry` result from `/`, no wallet, < 2 min | **PARTIAL — API verified live, browser/phone walkthrough pending** |
 | 7 | Every performance number in the UI shows `n` and window | **PASS** |
 | 8 | ≥1 receipt batch anchored on BSC, merkle proof verifies client-side | **PARTIAL — proven on a local chain, not mainnet** |
 | 9 | `/report` renders ≥3 both-ways tasks, real outputs, ≥1 trading/security | **PASS** |
-| 10 | `/healthz` reports every dependency, and the public URL is up | **PARTIAL — healthz PASS, public URL not deployed** |
+| 10 | `/healthz` reports every dependency, and the public URL is up | **PASS** |
 
-**5 PASS, 4 PARTIAL, 0 fake passes.** The four partials trace to three external
-blockers, all already tracked:
+**7 PASS, 2 PARTIAL, 0 fake passes.** Refreshed 2026-09-09 after T-070 (hosted
+deploy) went live and the T-072 CAKE manual-analyst row landed. The two
+remaining partials trace to funded keys only:
 
-- **No public deploy yet** (T-070) — the deploy artifacts are built and were run
-  locally, but the hosted site needs the user's GitHub / Render / Vercel
-  accounts. Blocks the "public URL" half of #6 and #10.
 - **Funded keys** — `ANCHOR_PRIVATE_KEY` + BNB for gas (#8), `SESSION_KEY_PRIVATE_KEY`
   for Tier-2 live (T-041 / T-043).
-- **`fixtures/manual_baselines.json` has no real human audit** (only the sample
-  row) — keeps `bsc-sentry` from a both-ways receipt (#5) and makes a `bsc-sentry`
-  *marketplace hire* fail at the baseline step (#6). `pcs-yield` now ships
-  (T-033, DefiLlama + on-chain) and has a receipt, so #5 is 4/5.
+- **#6's browser/phone leg is unverified**, not blocked — the API-level hire
+  now succeeds against the live site (see §6 below); what's left is the actual
+  cold-browser and cold-phone walkthrough, tracked as step C in
+  `docs/human-steps.md`.
 
 ---
 
@@ -81,9 +81,9 @@ $ pytest -q tests/test_tier.py tests/test_harness.py -k "pure or sign or signer 
 is frozen, and Tier 2 requires a signer. The harness additionally raises if a
 Tier 0/1 agent's `act()` returns signed actions. 7/7 pass (item 3 run above).
 
-## 5. Five agents → run + receipt with a baseline — PARTIAL (4/5)
+## 5. Five agents → run + receipt with a baseline — PASS (5/5)
 
-Real both-ways receipts in the dev DB right now:
+Real both-ways receipts:
 
 | agent | category | n | baseline | status |
 |---|---|---|---|---|
@@ -91,27 +91,37 @@ Real both-ways receipts in the dev DB right now:
 | `pcs-rebalancer` | rebalancing | 5 | static_range | OK |
 | `pcs-yield` | yield | 1 | top_headline_apr | OK (2026-09-08) |
 | `venus-guard` | health_factor | 1 | no_action | OK |
-| `bsc-sentry` | security | 0 | manual_analyst | **blocked** |
+| `bsc-sentry` | security | 1 | manual_analyst | **OK (2026-09-09)** |
 
 - `pcs-yield` (T-033) now ships on DefiLlama (PancakeSwap v2 BSC) + Binance vol +
   the on-chain sentry gate. A real hire ranks the v2 pool universe and beats the
   naive `top_headline_apr` pick by ~3.8 pp (`tests/test_pcs_yield.py`, live).
   The v3 fee/day-data upgrade is a self-hosted Envio indexer, `docs/envio-indexer.md`.
-- `bsc-sentry` **runs** and produces a real verdict + per-check evidence on
-  mainnet (`tests/test_sentry.py::test_full_report_on_known_good_token`, live,
-  2 pass), but its baseline is a human analyst timed with a stopwatch and
-  `fixtures/manual_baselines.json` holds only the sample row — so no both-ways
-  receipt. R2/R3 forbid inventing the human number. Fix: a teammate records one
-  real audit (address, wall seconds, findings) into that file — legwork gathered
-  in `docs/findings/T-072-cake-audit.md`.
+- `bsc-sentry` now has a real both-ways receipt against the live API
+  (`https://proofstand-orchestrator.onrender.com`): CAKE audited manually with
+  a stopwatch (`fixtures/manual_baselines.json`, 54s, T-072) vs the agent's
+  4.57s → **delta -49.4s, favorable**, receipt `38d51918-a513-4b6c-8ec9-ffe220f81bb3`.
+  Landing this also surfaced and fixed a real bug: `BscSentryAgent.observe()`
+  never wrote `inputs` into `Observation.data` (every other agent does), so
+  `baseline_manual_analyst` could not resolve *any* target's baseline until
+  that was added — the missing JSON row was only half the blocker.
+- **Known degradation, not a bug:** the live check's `source_verified` axis
+  reads `warn` ("BscScan has no verified source") because `BSCSCAN_API_KEY` is
+  unset on Render (optional per `render.yaml`). The human audit *did* confirm
+  the source is verified by reading BscScan directly. Set the key before demo
+  day if you want the live verdict to reflect that.
 
 The receipt schema requires a baseline (`baseline_run_id NOT NULL`), so "runs but
 no baseline" cannot itself be persisted as a receipt — by design.
 
 ## 6. Stranger → real `bsc-sentry` result from `/`, no wallet — PARTIAL
 
-What works, verified locally:
+What's now verified against the live site:
 
+- `https://proofstand-orchestrator.onrender.com/healthz` → `status: ok`.
+- `POST /hires` for `bsc-sentry` + the CAKE address succeeds end to end against
+  the live API and returns the real receipt described in §5 above — the
+  both-ways wrapper that used to fail at the baseline step now works.
 - Landing (`/`) shows the four category tiles and the CTA
   **"Try an agent — no wallet needed"** deep-linking to
   `/agent/bsc-sentry?target=0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82` (CAKE).
@@ -120,13 +130,13 @@ What works, verified locally:
   the honeypot case correctly returns `CRITICAL` with the sell-revert string as
   evidence.
 
-What is not verifiable end to end:
+What's still open — not blocked, just not walked yet:
 
-- **Public URL is not live** (T-070) — cannot do the "from a cold phone" run.
-- A `bsc-sentry` **hire through the marketplace** currently fails at the baseline
-  step for any token with no recorded manual audit (see #5), so the SSE run view
-  would show an error rather than the verdict. The verdict path itself is not
-  blocked; the both-ways wrapper is.
+- The actual **browser click-through** on the deployed Vercel frontend (CTA →
+  run view → verdict rendering), and the **cold-phone** pass from
+  `docs/deploy.md` §4 / `docs/demo.md`'s rehearsal log. This is step C in
+  `docs/human-steps.md` — needs a person, a phone, and a stopwatch, not more
+  engineering.
 
 ## 7. Every UI performance number shows `n` + window — PASS
 
@@ -177,21 +187,22 @@ replay method stated; the two spec §10 tasks with no data (`bsc-sentry`,
 `pcs-yield`) render in `planned[]` with a reason. `GET /report/advantage.pdf`
 returns a valid PDF (`tests/test_api.py::test_advantage_report_pdf`).
 
-## 10. `/healthz` reports every dependency + public URL up — PARTIAL
+## 10. `/healthz` reports every dependency + public URL up — PASS
 
 `GET /healthz` reports `db`, `redis`, `rpc`, `hummingbot`, `gateway` individually
 and returns `status: "ok"` when `db` and `rpc` are ok (Redis down does not
-degrade it — Redis is optional). Verified against the Dockerised orchestrator run
-locally:
+degrade it — Redis is optional). T-070 is live; verified against the public URL
+2026-09-09:
 
 ```
-{"status":"ok","deps":{"db":"ok","redis":"down","rpc":"ok (block 120532197)",
+$ curl https://proofstand-orchestrator.onrender.com/healthz
+{"status":"ok","deps":{"db":"ok","redis":"down","rpc":"ok (block 120906010)",
  "hummingbot":"not_configured (T-041)","gateway":"not_configured (T-004 profile)"}}
 ```
 
-**Public URL is not up** — deploy artifacts (Dockerfile, `render.yaml`,
-`vercel.json`, `docs/deploy.md`) are done and the image was proven locally, but
-the hosted deploy is the user's step (T-070).
+The Vercel frontend URL wiring and CORS pin (`docs/human-steps.md` step A3)
+should still be double-checked before demo day, but the public-URL-up half of
+this criterion is satisfied.
 
 ---
 

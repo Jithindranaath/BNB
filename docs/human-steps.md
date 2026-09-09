@@ -7,29 +7,18 @@ Follow in order — later steps depend on earlier ones landing.
 
 ---
 
-## 1. A1 · CAKE manual-analyst row — ~2 min, needs a human with a stopwatch
+## 1. A1 · CAKE manual-analyst row — DONE 2026-09-09
 
-Unblocks acceptance #5 (5/5 agents with receipts) and #6 (the sentry CTA works
-end to end), and lets the demo go `land → sentry hire` as spec'd instead of the
-venus-guard detour.
+Real audit timed at 54s, recorded in `fixtures/manual_baselines.json`, pushed
+and live. This also surfaced and fixed a real bug: `BscSentryAgent.observe()`
+never wrote `inputs` into `Observation.data`, so the baseline lookup couldn't
+resolve any target regardless of the JSON row — fixed alongside it.
 
-1. Open `0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82` on BscScan, **start a
-   stopwatch**, and confirm the findings already gathered in
-   `docs/findings/T-072-cake-audit.md` (verified source, not a proxy, mint is
-   `onlyOwner` and owner is the MasterChef contract — not an EOA — no
-   blacklist/pause/fee). Stop the stopwatch.
-2. Add a row to `fixtures/manual_baselines.json`, keyed by the **lowercased**
-   address, using the template at the bottom of the audit doc. Use your
-   **measured** `wall_seconds` — the file header forbids estimated numbers.
-3. Commit + push to `main`. Render auto-rebuilds (~5 min); `fixtures/` already
-   ships in the image.
+## 2. A2 · Seed the bsc-sentry receipt — DONE 2026-09-09
 
-## 2. A2 · Seed the bsc-sentry receipt
-
-Once A1 is live on Render, tell the assistant — it's a single hire against the
-live API, not a long-running process, so it doesn't need to wait for a
-dedicated terminal session. After this, all 5/5 agents have both-ways
-receipts and `/report` shows the sentry row as a real task.
+Ran against the live API. Real receipt: agent 4.57s vs the 54s human baseline,
+**delta -49.4s, favorable**. All 5/5 agents now have both-ways receipts;
+`docs/acceptance.md` #5 moved to PASS.
 
 ## 3. A3 · Confirm CORS is pinned — 1 min, Render dashboard
 
@@ -64,8 +53,8 @@ satisfies acceptance item T-040 (the ≥6h continuous grid run).
 
 ## 5. C · Demo rehearsal (T-072) — needs a person + phone + stopwatch
 
-Do this **after A1**, so the sentry CTA works, and after B has run so the
-curves have real points.
+A1 is done, so the sentry CTA now works against the live site. Do this after
+B has run so the curves have real points.
 
 1. Three cold browser passes of the 90-second path in `docs/demo.md` — Wi-Fi
    off / cellular, cold tab, no notes. Fill in the rehearsal-log table. Target
@@ -107,9 +96,6 @@ fork — dry-run it well before the demo, not during.
 
 ## Suggested order
 
-- **Today:** A1 → A2 → A3, then kick off B overnight.
+- **A1 and A2 are done.** Next: A3, then kick off B overnight.
 - **Tomorrow:** C (rehearsal + phone check) once B has run.
 - **If time allows:** D1, then D2.
-
-Once A1/A2 land, ping the assistant to refresh `docs/acceptance.md` — items #5
-and #6 move to **PASS**.
