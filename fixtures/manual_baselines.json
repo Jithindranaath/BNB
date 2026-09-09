@@ -5,5 +5,11 @@
     "wall_seconds": 420,
     "analyst": "sample",
     "findings": "n/a"
+  },
+  "0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82": {
+    "analyst": "Jithindranaath",
+    "wall_seconds": 54,
+    "verdict": "OK",
+    "findings": "verified source; not a proxy; mint is onlyOwner and owner is the MasterChef contract (emission, not an EOA); no blacklist/pause/fee functions. Note: analyst had already read docs/findings/T-072-cake-audit.md before this timed pass, so 54s reflects a prepped review, not a cold first-time audit."
   }
 }

@@ -56,6 +56,7 @@ class BscSentryAgent(Agent):
             "target": target,
             "generated_at": now_iso(),
             "checks": [c.as_dict() for c in checks],
+            "inputs": dict(inputs),
         }
         return Observation(data=data, snapshot_hash=canonical_hash(data))
 
