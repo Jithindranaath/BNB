@@ -41,7 +41,8 @@ venus-guard is the stronger story; grid is the safer clock.
 docker compose up -d           # postgres, redis, anvil — wait for healthy
 
 # 2. receipts (need >= a few per agent for the curves + report)
-python scripts/run_paper_loops.py --interval 600     # leave running in a real terminal
+python scripts/run_paper_loops.py --interval 600     # leave running in a real terminal — bnb-grid + pcs-rebalancer
+python scripts/rehire_singleshot.py --count 8        # venus-guard + pcs-yield have no loop; re-hire a few points each
 
 # 3. anchor a batch so /receipt pages show a real proof + tx
 #    (create_batch groups every unbatched receipt; submit_batch anchors it)
@@ -120,19 +121,22 @@ following the sentry CTA. Do not click the CTA on stage.
 
 `spec.md` §4.2 / `context.md` §"most memorable" — the yield router excludes any
 pool `bsc-sentry` flags `CRITICAL`, shown in a visible "excluded by security
-agent" section. **`pcs-yield` has no implementation** (only a manifest —
-`services/agents/pcs_yield/` has no `agent.py`). It is T-033, held for a working
-The Graph query key.
+agent" section. **T-033 is DONE** — `pcs-yield` hires for real (DefiLlama
+`pancakeswap-amm` BSC universe + Binance vol, Tier 0, no wallet), the sentry
+gate runs on every non-allowlist candidate, and `excluded_by_security_agent` is
+always present in the output (a real receipt exists: agent net 25.7% vs the
+naive headline-APR pick's real 21.8% → **+3.8 pp**, `tests/test_pcs_yield.py`).
 
-As of T-072 the marketplace shows this honestly: the **Yield** category tile
-still renders (main-track diversity), the `pcs-yield` card renders with a
-**"Not yet available — needs a The Graph query key (T-033)"** badge, the agent
-page hides the Hire panel, and `POST /hires` for it returns **409** with that
-reason (instead of failing deep in a worker thread).
+**Not yet demonstrated on stage:** a *visible* exclusion. DefiLlama's PCS v2 BSC
+universe is all blue-chip pools, so the gate never actually fires CRITICAL —
+`excluded_by_security_agent` renders, just empty. The gate is proven separately
+(`tests/test_sentry.py`, live), just not inside a `pcs-yield` hire yet.
 
-**Fix:** land a working Graph key → build `pcs_yield/agent.py` (the subgraph
-client `packages/data/sources/subgraph.py` is already complete and parked) →
-wire the sentry gate. Tracked as T-033.
+**Fix (optional upgrade, D1):** the PancakeSwap **v3** BSC feed (self-hosted
+Envio HyperIndex, `docs/envio-indexer.md`) has a longer pool tail that's more
+likely to contain something the sentry actually flags. Until that's deployed,
+narrate the gate as "it checks every candidate — this set happens to be clean"
+rather than staging a fake exclusion.
 
 ---
 

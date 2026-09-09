@@ -54,6 +54,11 @@ class Hire:
 
 
 _HIRES: dict[str, Hire] = {}
+# asyncio.create_task() only holds a *weak* ref to the task; if nothing else
+# references it, the event loop can garbage-collect it mid-run. Keep a strong
+# ref here and drop it on completion (see the "important" note in the asyncio
+# docs for create_task).
+_BACKGROUND_TASKS: set[asyncio.Task] = set()
 
 
 def get(hire_id: str) -> Hire | None:
@@ -67,7 +72,9 @@ def validate(manifest: Manifest, inputs: dict) -> dict[str, str]:
 async def start(agent_id: str, tier: int, inputs: dict, manifest: Manifest) -> Hire:
     hire = Hire(id=str(uuid.uuid4()), agent_id=agent_id, tier=tier, inputs=inputs)
     _HIRES[hire.id] = hire
-    asyncio.create_task(_run(hire))
+    task = asyncio.create_task(_run(hire))
+    _BACKGROUND_TASKS.add(task)
+    task.add_done_callback(_BACKGROUND_TASKS.discard)
     return hire
 
 

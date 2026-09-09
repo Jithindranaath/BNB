@@ -86,6 +86,26 @@ Railway, Fly.io, and Koyeb all work the same way: point at the Dockerfile, set
 `DATABASE_URL`, expose the injected `$PORT`. Fly.io has no idle sleep if the
 cold-start wait bothers you.
 
+**Also set `BINANCE_BASE_URL=https://data-api.binance.vision` on any host you
+add outside `render.yaml`** (see below) — the blueprint already carries it.
+
+### Two gotchas already fixed — don't rediscover them on a new host
+
+- **Binance geoblocks `api.binance.com` (HTTP 451)** from most datacentre IPs,
+  Render's included. `render.yaml` points `BINANCE_BASE_URL` at
+  `https://data-api.binance.vision` instead — same `/api/v3/klines` +
+  `/api/v3/ticker/price` shape, no auth, not geofenced. If you deploy anywhere
+  `render.yaml` doesn't apply (a manual Railway/Fly/Koyeb service, or a fresh
+  Render service built by hand instead of the Blueprint), set this env var
+  yourself or every kline pull 451s.
+- **Runtime fixtures ship in the image.** `gas_units.json` and
+  `manual_baselines.json` are read at runtime (`packages/data/cache.py`,
+  `services/orchestrator/baselines.py`) via a path resolved from
+  `Path(__file__)`, not bundled into the wheel — the Dockerfile has an explicit
+  `COPY fixtures/ fixtures/` for this. If a future refactor moves the
+  Dockerfile or changes the build context, keep that line or `bsc-sentry`'s
+  baseline (and gas-cost figures) silently 404 in prod only.
+
 ---
 
 ## 2. Front end → Vercel
