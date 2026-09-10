@@ -12,6 +12,23 @@ Built for the [BNB Chain "Smart Money Era" hackathon](https://www.bnbchain.org/e
 
 ---
 
+## Demo
+
+<video src="https://github.com/Jithindranaath/BNB/raw/main/docs/media/proofstand-demo.mp4" controls muted playsinline width="100%"></video>
+
+▶ **[proofstand-demo.mp4](docs/media/proofstand-demo.mp4)** (if the player doesn't load inline) — a narrated ~95-second walkthrough recorded against the live site: cold landing → hire `bsc-sentry` on CAKE with no wallet → the timed comparison against a manual audit → recompute the receipt's Merkle proof in-browser → the Agent Advantage Report → `venus-guard` turning a ~$150 liquidation into a ~$300 swing, every figure tracing back to a receipt.
+
+### Live
+
+| | |
+|---|---|
+| **Marketplace** | https://proofstand.vercel.app |
+| **Orchestrator API** | https://proofstand-orchestrator.onrender.com — [`/healthz`](https://proofstand-orchestrator.onrender.com/healthz) · [`/report/advantage`](https://proofstand-orchestrator.onrender.com/report/advantage) · [`/report/advantage.pdf`](https://proofstand-orchestrator.onrender.com/report/advantage.pdf) |
+
+> The free Render instance sleeps after ~15 min idle — the first request then takes ~50 s to wake it. Open `/healthz` once and wait for `status: ok` before walking the demo.
+
+---
+
 ## The idea
 
 Every team in this hackathon will ship a marketplace with an equity curve on each
@@ -344,27 +361,25 @@ evidence, *not* a trained classifier on a test set.
 
 ## Status
 
-Submission-day snapshot (2026-09-09). Nothing here is faked; partials name their blocker.
+Snapshot 2026-09-10. Nothing here is faked; partials name their blocker.
 
 **Done and verified**
 
+- **Deployed and reachable** — marketplace on Vercel, orchestrator + Postgres on Render; `/healthz` reports `db` and `rpc` ok. URLs above.
 - All five agents run against real BSC / Binance / DefiLlama data and produce receipts.
-- Four agents (`bnb-grid`, `pcs-rebalancer`, `pcs-yield`, `venus-guard`) have **both-ways** receipts in the DB.
+- **All five agents** (`bsc-sentry`, `bnb-grid`, `pcs-rebalancer`, `pcs-yield`, `venus-guard`) have **both-ways** receipts in the DB; `/report` renders all five with `n`, evaluation window, methodology, and a valid PDF.
+- `bsc-sentry` vs a real timed manual audit of CAKE: agent verdict in ~5 s against a human analyst's 54 s (`fixtures/manual_baselines.json`).
 - `pcs-yield` ships on DefiLlama (PancakeSwap v2 BSC) + Binance vol + the on-chain sentry gate; a real hire beats the `top_headline_apr` pick by ~3.8 pp.
 - 15/15 reference addresses verified on-chain; `decide()` purity and Tier 0/1 no-sign proven by tests.
-- Merkle anchor + client-side proof verification proven end-to-end **on a local Anvil chain**.
-- `/report` renders 3 both-ways tasks with real attached outputs and a valid PDF.
-- Deploy artifacts (Dockerised orchestrator, `render.yaml`, `vercel.json`, `docs/deploy.md`) built and run locally.
+- Merkle anchor + client-side proof verification working end-to-end — the `/receipt/{id}` page recomputes the proof in-browser (`@noble/hashes`) against the anchored `BatchAnchored` root.
 
 **Pending — all external, all tracked**
 
-- **Hosted public URL** — needs the maintainer's GitHub / Render / Vercel accounts (artifacts ready).
-- **Mainnet anchoring** — needs a funded low-value `ANCHOR_PRIVATE_KEY` + BNB for gas (proven on Anvil).
-- **`bsc-sentry` both-ways receipt** — its `manual_analyst` baseline needs one real human audit row (address, stopwatch time, findings) in `fixtures/manual_baselines.json`. The verdict engine itself works on real BSC; the CAKE audit legwork is gathered in `docs/findings/T-072-cake-audit.md`.
+- **BSC-mainnet anchoring** — batches are anchored on a dev chain today; mainnet needs a funded low-value `ANCHOR_PRIVATE_KEY` + BNB for gas.
 - **`pcs-yield` on v3 pools** — currently ranks v2; the v3 upgrade is a self-hosted Envio HyperIndex indexer (`docs/envio-indexer.md`).
 - **Grid Tier-2 live** — pending real funds; Tier-1 paper trading is live.
 
-Full acceptance walk against `spec.md` §11: `docs/acceptance.md` (5 PASS / 4 PARTIAL / 0 fake passes).
+Full acceptance walk against `spec.md` §11: `docs/acceptance.md`.
 
 ---
 
