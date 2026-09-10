@@ -14,9 +14,9 @@ Built for the [BNB Chain "Smart Money Era" hackathon](https://www.bnbchain.org/e
 
 ## Demo
 
-[![Watch the narrated demo](docs/media/proofstand-demo-poster.jpg)](docs/media/proofstand-demo.mp4)
+[![Watch the narrated demo](docs/media/proofstand-demo-poster.jpg)](https://github.com/Jithindranaath/BNB/blob/main/docs/media/proofstand-demo.mp4)
 
-▶ **[Play the ~95-second narrated walkthrough](docs/media/proofstand-demo.mp4)** — recorded against the live site: cold landing → hire `bsc-sentry` on CAKE with no wallet → the timed comparison against a manual audit → recompute the receipt's Merkle proof in-browser → the Agent Advantage Report → `venus-guard` turning a ~$150 liquidation into a ~$300 swing, every figure tracing back to a receipt.
+▶ **[Play the ~95-second narrated walkthrough](https://github.com/Jithindranaath/BNB/blob/main/docs/media/proofstand-demo.mp4)** — recorded against the live site: cold landing → hire `bsc-sentry` on CAKE with no wallet → the timed comparison against a manual audit → recompute the receipt's Merkle proof in-browser → the Agent Advantage Report → `venus-guard` turning a ~$150 liquidation into a ~$300 swing, every figure tracing back to a receipt.
 
 ### Live
 
@@ -361,7 +361,7 @@ evidence, *not* a trained classifier on a test set.
 
 ## Status
 
-Snapshot 2026-09-10. Nothing here is faked; partials name their blocker.
+Nothing here is faked; partials name their blocker.
 
 **Done and verified**
 
@@ -375,7 +375,7 @@ Snapshot 2026-09-10. Nothing here is faked; partials name their blocker.
 
 **Pending — all external, all tracked**
 
-- **BSC-mainnet anchoring** — batches are anchored on a dev chain today; mainnet needs a funded low-value `ANCHOR_PRIVATE_KEY` + BNB for gas.
+- **BSC-mainnet anchoring** — batches are anchored on a dev chain; mainnet needs a funded low-value `ANCHOR_PRIVATE_KEY` + BNB for gas.
 - **`pcs-yield` on v3 pools** — currently ranks v2; the v3 upgrade is a self-hosted Envio HyperIndex indexer (`docs/envio-indexer.md`).
 - **Grid Tier-2 live** — pending real funds; Tier-1 paper trading is live.
 
