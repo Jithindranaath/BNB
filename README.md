@@ -14,9 +14,9 @@ Built for the [BNB Chain "Smart Money Era" hackathon](https://www.bnbchain.org/e
 
 ## Demo
 
-<video src="https://github.com/Jithindranaath/BNB/raw/main/docs/media/proofstand-demo.mp4" controls muted playsinline width="100%"></video>
+[![Watch the narrated demo](docs/media/proofstand-demo-poster.jpg)](docs/media/proofstand-demo.mp4)
 
-▶ **[proofstand-demo.mp4](docs/media/proofstand-demo.mp4)** (if the player doesn't load inline) — a narrated ~95-second walkthrough recorded against the live site: cold landing → hire `bsc-sentry` on CAKE with no wallet → the timed comparison against a manual audit → recompute the receipt's Merkle proof in-browser → the Agent Advantage Report → `venus-guard` turning a ~$150 liquidation into a ~$300 swing, every figure tracing back to a receipt.
+▶ **[Play the ~95-second narrated walkthrough](docs/media/proofstand-demo.mp4)** — recorded against the live site: cold landing → hire `bsc-sentry` on CAKE with no wallet → the timed comparison against a manual audit → recompute the receipt's Merkle proof in-browser → the Agent Advantage Report → `venus-guard` turning a ~$150 liquidation into a ~$300 swing, every figure tracing back to a receipt.
 
 ### Live
 
